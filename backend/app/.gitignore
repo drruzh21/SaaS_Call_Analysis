@@ -21,3 +21,4 @@ pip-log.txt
 .tox
 *.mo
 .s3cfg
+.idea/
