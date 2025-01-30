@@ -10,7 +10,7 @@ from uuid import uuid4
 from app.db.base_class import Base
 
 if TYPE_CHECKING:
-    from . import Token  # noqa: F401
+    from . import Token, APIKey  # noqa: F401
 
 
 class User(Base):
@@ -35,3 +35,4 @@ class User(Base):
     refresh_tokens: Mapped[list["Token"]] = relationship(
         foreign_keys="[Token.authenticates_id]", back_populates="authenticates", lazy="dynamic"
     )
+    api_keys: Mapped[list["APIKey"]] = relationship(back_populates="user", lazy="dynamic")
