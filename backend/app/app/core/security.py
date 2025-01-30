@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Any, Union, Optional
+from zoneinfo import ZoneInfo
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -31,9 +32,9 @@ totp_factory = TOTP.using(secrets={"1": settings.TOTP_SECRET_KEY}, issuer=settin
 
 def create_access_token(*, subject: Union[str, Any], expires_delta: timedelta = None, force_totp: bool = False) -> str:
     if expires_delta:
-        expire = datetime.now() + expires_delta
+        expire = datetime.now(ZoneInfo("UTC")) + expires_delta
     else:
-        expire = datetime.now() + timedelta(seconds=settings.ACCESS_TOKEN_EXPIRE_SECONDS)
+        expire = datetime.now(ZoneInfo("UTC")) + timedelta(seconds=settings.ACCESS_TOKEN_EXPIRE_SECONDS)
     to_encode = {"exp": expire, "sub": str(subject), "totp": force_totp}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGO)
     return encoded_jwt
@@ -41,9 +42,9 @@ def create_access_token(*, subject: Union[str, Any], expires_delta: timedelta = 
 
 def create_refresh_token(*, subject: Union[str, Any], expires_delta: timedelta = None) -> str:
     if expires_delta:
-        expire = datetime.now() + expires_delta
+        expire = datetime.now(ZoneInfo("UTC")) + expires_delta
     else:
-        expire = datetime.now() + timedelta(seconds=settings.REFRESH_TOKEN_EXPIRE_SECONDS)
+        expire = datetime.now(ZoneInfo("UTC")) + timedelta(seconds=settings.REFRESH_TOKEN_EXPIRE_SECONDS)
     to_encode = {"exp": expire, "sub": str(subject), "refresh": True}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGO)
     return encoded_jwt
@@ -51,9 +52,9 @@ def create_refresh_token(*, subject: Union[str, Any], expires_delta: timedelta =
 
 def create_magic_tokens(*, subject: Union[str, Any], expires_delta: timedelta = None) -> list[str]:
     if expires_delta:
-        expire = datetime.now() + expires_delta
+        expire = datetime.now(ZoneInfo("UTC")) + expires_delta
     else:
-        expire = datetime.now() + timedelta(seconds=settings.ACCESS_TOKEN_EXPIRE_SECONDS)
+        expire = datetime.now(ZoneInfo("UTC")) + timedelta(seconds=settings.ACCESS_TOKEN_EXPIRE_SECONDS)
     fingerprint = str(uuid.uuid4())
     magic_tokens = []
     # First sub is the user.id, to be emailed. Second is the disposable id.

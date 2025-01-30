@@ -149,10 +149,19 @@ def create_user(
         send_new_account_email(email_to=user_in.email, username=user_in.email, password=user_in.password)
     return user
 
+@router.get("/data", response_model=schemas.Msg)
+def data_endpoint() -> Any:
+    """
+    Test current endpoint.
+    """
+    return {"msg": "data was sent successfully."}
 
 @router.get("/tester", response_model=schemas.Msg)
 def test_endpoint() -> Any:
     """
     Test current endpoint.
     """
-    return {"msg": "Message returned ok."}
+    return ({"msg": "Message returned ok. Definitely ok."})
+
+
+
