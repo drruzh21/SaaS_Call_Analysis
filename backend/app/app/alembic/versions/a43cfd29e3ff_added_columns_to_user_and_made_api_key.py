@@ -1,8 +1,8 @@
 """Added columns to user and made api key
 
-Revision ID: b07db80bfc6b
+Revision ID: a43cfd29e3ff
 Revises: fb120f8fc198
-Create Date: 2025-02-01 01:55:58.567059
+Create Date: 2025-02-01 01:59:12.240922
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'b07db80bfc6b'
+revision = 'a43cfd29e3ff'
 down_revision = 'fb120f8fc198'
 branch_labels = None
 depends_on = None
@@ -30,9 +30,9 @@ def upgrade():
     )
     op.create_index('ix_api_key_user_id_created_at', 'apikey', ['user_id', 'created_at'], unique=False)
     op.create_index(op.f('ix_apikey_key'), 'apikey', ['key'], unique=False)
-    op.add_column('user', sa.Column('role', sa.String(), nullable=False))
-    op.add_column('user', sa.Column('balance_rub', sa.Integer(), nullable=False))
-    op.add_column('user', sa.Column('company_name_id', sa.String(), nullable=False))
+    op.add_column('user', sa.Column('role', sa.String(), nullable=True))
+    op.add_column('user', sa.Column('balance_rub', sa.Integer(), nullable=True))
+    op.add_column('user', sa.Column('company_name_id', sa.String(), nullable=True))
     op.add_column('user', sa.Column('gpt_filter_prompt', sa.String(), nullable=True))
     op.create_index(op.f('ix_user_company_name_id'), 'user', ['company_name_id'], unique=True)
     # ### end Alembic commands ###

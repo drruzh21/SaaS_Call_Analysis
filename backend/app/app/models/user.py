@@ -36,7 +36,7 @@ class User(Base):
         foreign_keys="[Token.authenticates_id]", back_populates="authenticates", lazy="dynamic"
     )
     api_keys: Mapped[list["APIKey"]] = relationship(back_populates="user", lazy="dynamic")
-    role: Mapped[str] = mapped_column(nullable=False, default="user")
-    balance_rub: Mapped[int] = mapped_column(nullable=False, default=0)
-    company_name_id: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    role: Mapped[str] = mapped_column(nullable=True, default="user")
+    balance_rub: Mapped[int] = mapped_column(nullable=True, default=0)
+    company_name_id: Mapped[str] = mapped_column(unique=True, index=True, nullable=True)
     gpt_filter_prompt: Mapped[str] = mapped_column(nullable=True)
