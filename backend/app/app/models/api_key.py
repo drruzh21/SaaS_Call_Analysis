@@ -30,38 +30,32 @@ class APIKey(Base):
     key: Mapped[str] = mapped_column(
         primary_key=True,
         index=True,
-        comment="Unique API key string"
     )
     
     user_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("user.id", ondelete="CASCADE"),
-        comment="ID of the user who owns this API key"
     )
     
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
-        comment="Timestamp when the API key was created"
     )
     
     expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
-        comment="Optional timestamp when the API key expires"
     )
     
     is_active: Mapped[bool] = mapped_column(
         default=True,
         nullable=False,
-        comment="Whether this API key is currently active"
     )
     
     # Relationships
     user: Mapped["User"] = relationship(
         back_populates="api_keys",
-        comment="Reference to the user who owns this API key"
     )
 
     def __repr__(self) -> str:
