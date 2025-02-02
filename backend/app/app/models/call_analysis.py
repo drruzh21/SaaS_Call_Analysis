@@ -68,7 +68,7 @@ class CallAnalysisResult(Base):
     analysis_reason: Mapped[str] = mapped_column(String, default="")
     recommendations_how_to_work_with_client: Mapped[str] = mapped_column(String, default="")
     overall_analysis: Mapped[str] = mapped_column(String, default="")
-    bitrix_lead_url: Mapped[str] = mapped_column(String, default="")
+    lead_url: Mapped[str] = mapped_column(String, default="")
 
     # Relationship to objections
     objections: Mapped[List[Objection]] = relationship(
