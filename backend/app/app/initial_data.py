@@ -2,10 +2,11 @@ import logging
 from pathlib import Path
 import json
 from passlib.totp import generate_secret
+import asyncio
 
 from app.gdb.init_gdb import init_gdb
 from app.db.init_db import init_db
-from app.db.session import SessionLocal
+from app.db.session import async_session
 from app.gdb import NeomodelConfig
 from app.core.config import settings
 
@@ -14,7 +15,7 @@ from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixe
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-max_tries = 60 * 5  # 5 minutes
+max_tries = 60 * 5  # 5 минут
 wait_seconds = 1
 
 
@@ -24,26 +25,26 @@ wait_seconds = 1
     before=before_log(logger, logging.INFO),
     after=after_log(logger, logging.WARN),
 )
-def initNeo4j() -> None:
+async def initNeo4j() -> None:
     try:
         NeomodelConfig().ready()
-        init_gdb()
+        await init_gdb()
     except Exception as e:
         logger.error(e)
         raise e
 
 
-def init() -> None:
-    db = SessionLocal()
-    init_db(db)
+async def init() -> None:
+    async with async_session() as db:
+        await init_db(db)
 
 
-def main() -> None:
-    logger.info("Creating initial data")
-    initNeo4j()
-    init()
-    logger.info("Initial data created")
+async def main() -> None:
+    logger.info("Создание начальных данных")
+    await initNeo4j()
+    await init()
+    logger.info("Начальные данные созданы")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

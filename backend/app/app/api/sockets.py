@@ -20,13 +20,13 @@ async def receive_request(*, websocket: WebSocket) -> dict:
         return {}
 
 
-def sanitize_data_request(data: any) -> any:
+async def sanitize_data_request(data: any) -> any:
     # Putting here for want of a better place
     if isinstance(data, (list, tuple, set)):
-        return type(data)(sanitize_data_request(x) for x in data if x or isinstance(x, bool))
+        return type(data)([await sanitize_data_request(x) for x in data if x or isinstance(x, bool)])
     elif isinstance(data, dict):
         return type(data)(
-            (sanitize_data_request(k), sanitize_data_request(v))
+            (await sanitize_data_request(k), await sanitize_data_request(v))
             for k, v in data.items()
             if k and v or isinstance(v, bool)
         )

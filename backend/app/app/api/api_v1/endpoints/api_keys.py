@@ -36,7 +36,7 @@ async def update_api_key(
     db_obj = await crud.api_key.get_by_key(db=db, key=key)
     if not db_obj or db_obj.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="API key not found")
-    return await crud.api_key.update(db=db, db_obj=db_obj, obj_in=obj_in)
+    return await crud.api_key.update(db=db, db_obj=db_obj, obj_in=obj_in, user_id=current_user.id)
 
 @router.delete("/{key}", response_model=schemas.Msg)
 async def delete_api_key(
