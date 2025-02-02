@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, Integer, Sequence, text
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
 from uuid import uuid4
@@ -38,5 +38,12 @@ class User(Base):
     api_keys: Mapped[list["APIKey"]] = relationship(back_populates="user", lazy="dynamic")
     role: Mapped[str] = mapped_column(nullable=True, default="user")
     balance_rub: Mapped[int] = mapped_column(nullable=True, default=0)
-    company_name_id: Mapped[str] = mapped_column(unique=True, index=True, nullable=True)
+    company_name_id: Mapped[int] = mapped_column(
+        Integer,
+        Sequence('user_company_name_id_seq'),
+        server_default=text("nextval('user_company_name_id_seq')"),
+        unique=True,
+        index=True,
+        nullable=False
+    )
     gpt_filter_prompt: Mapped[str] = mapped_column(nullable=True)

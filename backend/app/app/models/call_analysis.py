@@ -29,8 +29,8 @@ class CallAnalysisResult(Base):
     __tablename__ = "call_analysis_results"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    company_name_id: Mapped[str] = mapped_column(
-        String, 
+    company_name_id: Mapped[int] = mapped_column(
+        Integer, 
         ForeignKey("user.company_name_id"), 
         index=True,
         nullable=False
