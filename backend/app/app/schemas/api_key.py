@@ -1,27 +1,29 @@
 from datetime import datetime, timezone
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field, constr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from uuid import UUID
 
 class APIKeyBase(BaseModel):
     expires_at: Optional[datetime] = Field(
         default=None,
-        description="When this API key expires. If null, the key never expires"
+        description="Когда этот API ключ истекает. Если null, ключ никогда не истекает"
     )
     is_active: bool = Field(
         default=True,
-        description="Whether this API key is active"
+        description="Активен ли этот API ключ"
     )
-
-class APIKeyUpdate(BaseModel):
-    expires_at: Optional[datetime] = None
-    is_active: Optional[bool] = None
 
     @field_validator("expires_at")
     def validate_expiry(cls, v):
+        if v and v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)  # Делаем datetime "aware", если он "naive"
         if v and v < datetime.now(timezone.utc):
-            raise ValueError("Expiry date cannot be in the past")
+            raise ValueError("Дата истечения не может быть в прошлом")
         return v
+
+class APIKeyUpdate(APIKeyBase):
+    expires_at: Optional[datetime] = None
+    is_active: Optional[bool] = None
 
 class APIKeyInDBBase(APIKeyBase):
     key: str
@@ -42,8 +44,9 @@ class APIKeyInDBBase(APIKeyBase):
     )
 
 class APIKey(APIKeyInDBBase):
-    """
-    API Key model that represents an API key in the system.
-    Contains all the fields necessary to identify and validate an API key.
-    """
+    """Модель API ключа, представляющая API ключ в системе"""
+    pass
+
+class APIKeyCreate(APIKeyBase):
+    """Схема для создания нового API ключа"""
     pass
