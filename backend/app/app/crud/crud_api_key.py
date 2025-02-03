@@ -10,9 +10,6 @@ from app.models import APIKey
 from app.schemas import APIKeyCreate, APIKeyUpdate
 from app.core.config import settings
 
-class TooManyAPIKeysError(Exception):
-    pass
-
 class CRUDAPIKey(CRUDBase[APIKey, APIKeyCreate, APIKeyUpdate]):
     """CRUD operations for API keys."""
 
@@ -31,19 +28,9 @@ class CRUDAPIKey(CRUDBase[APIKey, APIKeyCreate, APIKeyUpdate]):
         self, 
         db: AsyncSession, 
         *, 
-        user_id: UUID,
-        max_keys_per_user: int = settings.MAX_API_KEYS_PER_USER
+        user_id: UUID
     ) -> APIKey:
         """Create a new API key for a user."""
-        # Check if user hasn't exceeded maximum number of keys
-        result = await db.execute(
-            select(func.count())
-            .where(APIKey.user_id == user_id)
-            .where(APIKey.is_active == True)
-        )
-        if result.scalar() >= max_keys_per_user:
-            raise TooManyAPIKeysError(f"User cannot have more than {max_keys_per_user} active API keys")
-
         key = await self._generate_unique_key(db)
         db_obj = APIKey(key=key, user_id=user_id)
         db.add(db_obj)

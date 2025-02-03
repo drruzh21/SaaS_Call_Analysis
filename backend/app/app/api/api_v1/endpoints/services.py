@@ -10,9 +10,9 @@ router = APIRouter()
 
 
 @router.post("/contact", response_model=schemas.Msg, status_code=201)
-def send_email(*, data: EmailContent) -> Any:
+async def send_email(*, data: EmailContent) -> Any:
     """
     Standard app contact us.
     """
-    send_web_contact_email(data=data)
+    await send_web_contact_email(data=data)
     return {"msg": "Web contact email sent"}
