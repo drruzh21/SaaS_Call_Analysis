@@ -33,7 +33,7 @@ async def update_api_key(
     obj_in: schemas.APIKeyUpdate,
     current_user: Annotated[models.User, Depends(deps.get_current_active_user)],
 ) -> Any:
-    db_obj = await crud.api_key.get_by_key(db=db, key=key)
+    db_obj = await crud.api_key.get_by_key(db=db, key=key, check_active=False)
     if not db_obj or db_obj.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="API key not found")
     return await crud.api_key.update(db=db, db_obj=db_obj, obj_in=obj_in, user_id=current_user.id)
