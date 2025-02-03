@@ -13,3 +13,4 @@ from .user import User, UserCreate, UserInDB, UserUpdate, UserLogin
 from .emails import EmailContent, EmailValidation
 from .totp import NewTOTP, EnableTOTP
 from .api_key import APIKey, APIKeyBase, APIKeyUpdate, APIKeyInDBBase, APIKeyCreate
+from .task import TextRequest, TaskResponse

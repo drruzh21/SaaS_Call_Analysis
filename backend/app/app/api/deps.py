@@ -1,6 +1,6 @@
 from typing import AsyncGenerator, Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
@@ -128,4 +128,47 @@ async def get_active_websocket_user(*, db: AsyncSession, token: str) -> models.U
         raise ValidationError("User not found")
     if not await crud.user.is_active(user):
         raise ValidationError("Inactive user")
+    return user
+
+
+async def get_current_user_by_api_key(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    api_key: str = Header(None, alias="X-API-Key"),
+) -> models.User:
+    """
+    Get current user by API key from header.
+    Validates the API key and returns the associated user.
+    
+    Checks:
+    1. API key is provided
+    2. API key exists and is active
+    3. API key is not expired
+    4. Associated user exists and is active
+    """
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API key is required",
+        )
+    
+    api_key_obj = await crud.api_key.get_by_key(db, key=api_key, check_active=True)
+    if not api_key_obj:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired API key",
+        )
+    
+    if not api_key_obj.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API key is inactive",
+        )
+    
+    user = await crud.user.get(db, id=api_key_obj.user_id)
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is inactive or deleted",
+        )
+    
     return user
