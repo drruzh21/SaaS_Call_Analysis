@@ -1,9 +1,9 @@
-"""Script for generating test data for call analysis system."""
+"""Скрипт для генерации тестовых данных для системы анализа звонков."""
 import random
 from datetime import datetime, timedelta
 import pytz
-from sqlalchemy.orm import Session
-from app.db.session import SessionLocal
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.session import async_session
 
 from app.models import CallAnalysisResult, Objection
 
@@ -39,7 +39,7 @@ OBJECTIONS = [
 ]
 
 def get_manager_name(company_name_id: int) -> str:
-    """Get a random manager name for the specified company."""
+    """Получить случайное имя менеджера для указанной компании."""
     if company_name_id == 7:
         return random.choice(COMPANY_7_MANAGERS)
     elif company_name_id == 8:
@@ -48,14 +48,14 @@ def get_manager_name(company_name_id: int) -> str:
         raise ValueError(f"Unexpected company_name_id: {company_name_id}")
 
 def generate_random_date() -> datetime:
-    """Generate a random date in December 2024."""
+    """Сгенерировать случайную дату в декабре 2024 года."""
     start_date = datetime(2024, 12, 1, tzinfo=pytz.UTC)
     end_date = datetime(2024, 12, 31, 23, 59, 59, tzinfo=pytz.UTC)
     time_between_dates = end_date - start_date
     days_between = time_between_dates.days
     random_number_of_days = random.randrange(days_between)
     random_date = start_date + timedelta(days=random_number_of_days)
-    # Add random hours and minutes
+    # Добавить случайные часы и минуты
     random_date = random_date.replace(
         hour=random.randint(9, 17),
         minute=random.randint(0, 59)
@@ -63,11 +63,11 @@ def generate_random_date() -> datetime:
     return random_date
 
 def generate_metric_value() -> float:
-    """Generate a metric value: 0.0, 0.5, or 1.0."""
+    """Сгенерировать значение метрики: 0.0, 0.5 или 1.0."""
     return random.choice([0.0, 0.5, 1.0])
 
 def generate_comment() -> str:
-    """Generate a random comment."""
+    """Сгенерировать случайный комментарий."""
     comments = [
         "Менеджер хорошо справился с задачей",
         "Требуется улучшение навыков",
@@ -82,25 +82,25 @@ def generate_comment() -> str:
     ]
     return random.choice(comments)
 
-def create_objections(db: Session) -> list[Objection]:
-    """Create objections in the database."""
+async def create_objections(db: AsyncSession) -> list[Objection]:
+    """Создать возражения в базе данных."""
     objections = []
     for obj_name in OBJECTIONS:
         objection = Objection(name=obj_name)
         db.add(objection)
         objections.append(objection)
-    db.commit()
+    await db.commit()
     return objections
 
-def create_call_analysis(
-    db: Session,
+async def create_call_analysis(
+    db: AsyncSession,
     company_name_id: int,
     objections: list[Objection],
     count: int = 150
 ) -> None:
-    """Create call analysis results for a company."""
+    """Создать результаты анализа звонков для компании."""
     for _ in range(count):
-        # Generate metrics
+        # Сгенерировать метрики
         metrics = {
             'is_manager_established_contact': generate_metric_value(),
             'is_manager_holding_initiative': generate_metric_value(),
@@ -114,18 +114,18 @@ def create_call_analysis(
             'is_manager_using_client_framing': generate_metric_value(),
         }
         
-        # Calculate final grade as average of all metrics
+        # Рассчитать итоговую оценку как среднее всех метрик
         final_grade = sum(metrics.values()) / len(metrics)
         
-        # Create call analysis result
+        # Создать результат анализа звонка
         call = CallAnalysisResult(
             company_name_id=company_name_id,
             date=generate_random_date(),
             manager_fio=get_manager_name(company_name_id),
-            # Metrics
+            # Метрики
             **metrics,
             final_grade=final_grade,
-            # Comments
+            # Комментарии
             is_manager_established_contact_comment=generate_comment(),
             is_manager_holding_initiative_comment=generate_comment(),
             is_manager_using_dialog_programming_comment=generate_comment(),
@@ -136,7 +136,7 @@ def create_call_analysis(
             is_manager_handling_objections_comment=generate_comment(),
             is_manager_setting_next_step_comment=generate_comment(),
             is_manager_using_client_framing_comment=generate_comment(),
-            # Additional fields
+            # Дополнительные поля
             call_text="Текст звонка будет добавлен позже",
             analysis_reason="Плановый анализ",
             recommendations_how_to_work_with_client="Рекомендации будут добавлены позже",
@@ -144,32 +144,35 @@ def create_call_analysis(
             lead_url="https://example.com/lead/123"
         )
         
-        # Add random objections (1-3 per call)
+        # Добавить случайные возражения (1-3 на звонок)
         num_objections = random.randint(1, 3)
         selected_objections = random.sample(objections, num_objections)
         call.objections.extend(selected_objections)
         
         db.add(call)
     
-    db.commit()
+    await db.commit()
 
-def main():
-    """Main function to generate test data."""
-    db = SessionLocal()
-    try:
-        # Create objections first
-        objections = create_objections(db)
+async def main():
+    """Основная функция для генерации тестовых данных."""
+    async with async_session() as db:
+        try:
+            # Сначала создаем возражения
+            objections = await create_objections(db)
+            
+            # Создаем результаты анализа звонков для компании 7
+            await create_call_analysis(db, company_name_id=7, objections=objections)
+            
+            # Создаем результаты анализа звонков для компании 8
+            await create_call_analysis(db, company_name_id=8, objections=objections)
+            
+            print("Тестовые данные успешно сгенерированы!")
         
-        # Create call analysis results for company 7
-        create_call_analysis(db, company_name_id=7, objections=objections)
-        
-        # Create call analysis results for company 8
-        create_call_analysis(db, company_name_id=8, objections=objections)
-        
-        print("Test data generated successfully!")
-    
-    finally:
-        db.close()
+        except Exception as e:
+            print(f"Ошибка при генерации тестовых данных: {e}")
+            await db.rollback()
+            raise
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
