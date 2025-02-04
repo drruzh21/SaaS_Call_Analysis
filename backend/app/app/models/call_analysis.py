@@ -49,6 +49,7 @@ class CallAnalysisResult(Base):
     is_manager_handling_objections: Mapped[float] = mapped_column(Float(precision=10, decimal_return_scale=5), default=0.0)
     is_manager_setting_next_step: Mapped[float] = mapped_column(Float(precision=10, decimal_return_scale=5), default=0.0)
     is_manager_using_client_framing: Mapped[float] = mapped_column(Float(precision=10, decimal_return_scale=5), default=0.0)
+    tone_of_voice: Mapped[float] = mapped_column(Float(precision=10, decimal_return_scale=5), default=0.0, nullable=True)
     final_grade: Mapped[float] = mapped_column(Float(precision=10, decimal_return_scale=5), default=0.0)
 
     # Comments
@@ -62,6 +63,7 @@ class CallAnalysisResult(Base):
     is_manager_handling_objections_comment: Mapped[str] = mapped_column(String, default="")
     is_manager_setting_next_step_comment: Mapped[str] = mapped_column(String, default="")
     is_manager_using_client_framing_comment: Mapped[str] = mapped_column(String, default="")
+    tone_of_voice_comment: Mapped[str] = mapped_column(String, default="", nullable=True)
 
     # Additional fields
     call_text: Mapped[str] = mapped_column(String, default="")
