@@ -1,7 +1,15 @@
+"""AI agent for overall call analysis."""
+
+import logging
+from typing import Any
+
 from app.ai.ai_agents.i_gpt_analyzer import IGptAnalyzer
-from app.ai.structured_output_models.call_overall_model import CallOverallAnalysis
 from app.ai.prompts.overall_analyzer_prompt import OVERALL_ANALYZER_PROMPT
+from app.ai.structured_output_models.call_overall_model import CallOverallAnalysis
 from app.ai.openai_llm_service import OpenAILLMService
+
+
+logger = logging.getLogger(__name__)
 
 
 class CallOverallAnalyzer(IGptAnalyzer[CallOverallAnalysis]):
@@ -30,7 +38,44 @@ class CallOverallAnalyzer(IGptAnalyzer[CallOverallAnalysis]):
         Returns:
             CallOverallAnalysis containing analysis and recommendations
         """
-        result = self.llm_service.get_completion(
-            f"Проведите общий анализ следующего телефонного разговора и предоставьте рекомендации:\n\n{call_text}"
-        )
-        return CallOverallAnalysis.parse_obj(result)
+        logger.info("Starting overall call analysis")
+        logger.debug(f"Analyzing call text of length: {len(call_text)}")
+        
+        try:
+            # Get analysis from GPT
+            logger.debug("Sending request to GPT")
+            result = self.llm_service.get_completion(
+                f"Проведите общий анализ следующего телефонного разговора и предоставьте рекомендации:\n\n{call_text}"
+            )
+            
+            # Validate response
+            self._validate_response(result)
+            
+            logger.info("Overall call analysis completed successfully")
+            logger.debug(f"Generated {len(result.recommendations_how_to_work_with_client)} recommendations")
+            return CallOverallAnalysis.parse_obj(result)
+            
+        except Exception as e:
+            logger.error(f"Error during overall analysis: {str(e)}", exc_info=True)
+            raise
+            
+    def _validate_response(self, response: dict[str, Any]):
+        """Validate that the response contains required fields.
+        
+        Args:
+            response: Analysis response to validate
+            
+        Raises:
+            ValueError: If required fields are missing or empty
+        """
+        logger.debug("Validating overall analysis response")
+        
+        if not response.get("overall_analysis"):
+            error_msg = "Overall analysis cannot be empty"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+            
+        if not response.get("recommendations_how_to_work_with_client"):
+            error_msg = "Recommendations cannot be empty"
+            logger.error(error_msg)
+            raise ValueError(error_msg)

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from datetime import datetime
 
 
 class TextRequest(BaseModel):
@@ -13,9 +14,10 @@ class CallAnalysisRequest(BaseModel):
     """
     Request model for call analysis.
     """
-    text: str = Field(..., description="The transcribed call text to analyze")
-    call_duration: float = Field(..., description="Duration of the call in seconds")
-    manager_name: str = Field(..., description="Full name of the manager who handled the call")
+    text: str
+    call_duration: float
+    manager_name: str
+    datetime: datetime
     
     # Optional CRM fields
     deal_source: Optional[str] = Field(None, description="Source of the deal from CRM")

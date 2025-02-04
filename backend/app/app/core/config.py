@@ -113,5 +113,7 @@ class Settings(BaseSettings):
         self.NEO4J_BOLT_URL = f"{self.NEO4J_BOLT}://{self.NEO4J_USERNAME}:{self.NEO4J_PASSWORD}@{self.NEO4J_SERVER}:7687"
         return self
 
+    GPT_MODEL: str = "gpt-4o-mini"
+    OPENAI_API_KEY: str
 
 settings = Settings()

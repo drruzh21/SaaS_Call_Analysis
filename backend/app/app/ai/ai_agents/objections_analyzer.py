@@ -4,6 +4,10 @@ from app.ai.ai_agents.i_gpt_analyzer import IGptAnalyzer
 from app.ai.prompts.objections_analyzer_prompt import OBJECTIONS_ANALYZER_PROMPT
 from app.ai.structured_output_models.objections_analysis_model import ObjectionsAnalysis
 from app.ai.openai_llm_service import OpenAILLMService
+import logging
+from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class ObjectionsAnalyzer(IGptAnalyzer[ObjectionsAnalysis]):
@@ -34,4 +38,41 @@ class ObjectionsAnalyzer(IGptAnalyzer[ObjectionsAnalysis]):
         Returns:
             ObjectionsAnalysis containing both detailed analysis and list of objection types
         """
-        return await self._llm_service.get_structured_response(call_text)
+        logger.info("Starting objections analysis")
+        logger.debug(f"Analyzing call text of length: {len(call_text)}")
+        
+        try:
+            # Get analysis from GPT
+            logger.debug("Sending request to GPT")
+            response = await self._llm_service.get_structured_response(call_text)
+            
+            # Validate response
+            self._validate_response(response)
+            
+            logger.info("Objections analysis completed successfully")
+            logger.debug(f"Found {len(response.objections)} objections")
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error during objections analysis: {str(e)}", exc_info=True)
+            raise
+            
+    def _validate_response(self, response: ObjectionsAnalysis):
+        """Validate that the response contains required fields.
+        
+        Args:
+            response: Analysis response to validate
+            
+        Raises:
+            ValueError: If required fields are missing or empty
+        """
+        logger.debug("Validating objections analysis response")
+        
+        if not response.analysis:
+            error_msg = "Objections analysis cannot be empty"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+            
+        if not response.objections:
+            logger.warning("No objections found in the call")
+            # This is not an error, as some calls might not have objections

@@ -2,8 +2,7 @@ from typing import Any, Type
 from openai import OpenAI
 from pydantic import BaseModel
 from pydantic import Field
-
-#from src.config import GPT_MODEL, OPENAI_API_KEY
+from app.core.config import settings
 
 
 class OpenAILLMService():
@@ -13,7 +12,7 @@ class OpenAILLMService():
         self,
         response_format: Type[BaseModel],  # <--- Класс (тип) вашей Pydantic модели
         system_prompt: str,
-        api_key: str = OPENAI_API_KEY,
+        api_key: str = settings.OPENAI_API_KEY,
     ):
         """
         Initialize OpenAI LLM service
@@ -40,7 +39,7 @@ class OpenAILLMService():
         # Вызываем beta.chat.completions.parse и передаём
         # именно self.response_format как тип, а не type(self.response_format).
         completion = self.client.beta.chat.completions.parse(
-            model=GPT_MODEL,
+            model=settings.GPT_MODEL,
             messages=messages,
             response_format=self.response_format,
             temperature=0.2
@@ -59,14 +58,3 @@ class OpenAILLMService():
             # библиотека OpenAI положит причину в поле `refusal`.
             return message.refusal
 
-
-if __name__ == "__main__":
-    # Пример динамической подстановки Pydantic-класса:
-    # мы передаём в конструктор именно класс CallScreeningResult
-    llm = OpenAILLMService(
-        response_format=CallScreeningResult,
-        system_prompt=(
-            "You are an expert at analyzing sales calls."
-        ),
-    )
-    print(llm.get_completion("Hello, who are you?"))
