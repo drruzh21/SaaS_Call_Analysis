@@ -18,7 +18,7 @@ class CallAnalysisRequest(BaseModel):
     call_duration: float
     manager_name: str
     datetime: datetime
-    
+
     # Optional CRM fields
     deal_source: Optional[str] = Field(None, description="Source of the deal from CRM")
     sales_funnel_stage: Optional[str] = Field(None, description="Current stage in the sales funnel")

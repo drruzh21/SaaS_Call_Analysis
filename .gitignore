@@ -10,3 +10,4 @@ docker-stack.yml
 */*/.venv
 ./.idea
 .idea/
+.DS_Store
