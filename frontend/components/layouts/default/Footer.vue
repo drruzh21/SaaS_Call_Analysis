@@ -4,7 +4,13 @@
   @component Footer
 -->
 <template>
-    <footer class="mt-24 bg-gray-900 sm:mt-12">
+    <!-- 
+  Footer component
+  - Removed top margin as it's now handled by flex layout
+  - bg-gray-900 maintains the dark theme
+  - py-8 provides consistent vertical padding
+-->
+<footer class="bg-gray-900">
       <div class="mx-auto max-w-7xl py-8 px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col items-center space-y-4">
           <a href="mailto:b2b.ai.agency@gmail.com" class="text-base text-gray-400 hover:text-gray-300">

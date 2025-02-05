@@ -149,7 +149,7 @@ import type { IUserProfileUpdate, INewTOTP, IEnableTOTP } from "@/interfaces"
 const authStore = useAuthStore()
 const tokenStore = useTokenStore()
 let profile = {} as IUserProfileUpdate
-const title = "Security"
+const title = "Безопасность"
 const redirectTOTP = "/settings"
 const totpEnabled = ref(false)
 const totpModal = ref(false)

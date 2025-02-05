@@ -13,7 +13,7 @@
                 :is="Cog8ToothIcon" 
                 class="text-gray-400 group-hover:text-gray-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" aria-hidden="true" 
               />
-              <span class="truncate">Settings</span>
+              <span class="truncate">Настройки</span>
             </button>
             <div></div>
             </div>
@@ -56,11 +56,11 @@ definePageMeta({
 });
 
 const navigation = [
-  { name: "Users", id: "USERS", icon: UsersIcon },
-  { name: "Create", id: "CREATE", icon: UserPlusIcon }
+  { name: "Пользователи", id: "USERS", icon: UsersIcon },
+  { name: "Создать", id: "CREATE", icon: UserPlusIcon }
 ]
-const title = "User moderation"
-const description = "Create, delete and update individual user settings."
+const title = "Модерация пользователей"
+const description = "Создание, удаление и изменение настроек пользователей."
 const selected = ref("USERS")
 
 function changeSelection(selection: string) {

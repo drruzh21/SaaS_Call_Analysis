@@ -9,7 +9,7 @@
       class="text-gray-400 group-hover:text-gray-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" 
       aria-hidden="true" 
     />
-    <span class="truncate">Validate email</span>
+    <span class="truncate">Подтвердить email</span>
   </button>
 </template>
   

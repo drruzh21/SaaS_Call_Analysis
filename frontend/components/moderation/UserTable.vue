@@ -3,11 +3,11 @@
     <table class="min-w-full divide-y divide-gray-300">
       <thead class="bg-gray-50">
         <tr>
-          <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Name</th>
+          <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Имя</th>
           <th scope="col" class="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell">Email</th>
-          <th scope="col" class="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell">Validated</th>
-          <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Active</th>
-          <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Moderator</th>
+          <th scope="col" class="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell">Подтвержден</th>
+          <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Активен</th>
+          <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Модератор</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200 bg-white">
@@ -15,9 +15,9 @@
           <td class="w-full max-w-0 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:w-auto sm:max-w-none sm:pl-6">
             {{ person.full_name }}
             <dl class="font-normal lg:hidden">
-              <dt class="sr-only">Email</dt>
+              <dt class="sr-only">Email адрес</dt>
               <dd class="mt-1 truncate text-gray-700">{{ person.email }}</dd>
-              <dt class="sr-only sm:hidden">Validated</dt>
+              <dt class="sr-only sm:hidden">Подтвержден</dt>
               <dd class="mt-1 truncate sm:hidden">
                 <ModerationCheckState :check="person.email_validated" />
               </dd>

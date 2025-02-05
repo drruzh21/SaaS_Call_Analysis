@@ -53,6 +53,7 @@
 <script setup lang="ts">
 import { KeyIcon, UserCircleIcon, UsersIcon, CommandLineIcon } from "@heroicons/vue/24/outline"
 import { useAuthStore } from "@/stores"
+import SettingsApiKeys from "@/components/settings/ApiKeys.vue"
 
 definePageMeta({
   middleware: ["authenticated"],

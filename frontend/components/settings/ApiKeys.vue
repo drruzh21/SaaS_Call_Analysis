@@ -40,7 +40,8 @@
                 >
                   <div>
                     <p class="text-sm font-medium text-gray-900">{{ key.name }}</p>
-                    <p class="text-sm text-gray-500">Создан: {{ formatDate(key.created) }}</p>
+                    <p class="text-sm font-mono text-gray-600">{{ key.key }}</p>
+                    <p class="text-sm text-gray-500">Создан: {{ formatDate(new Date(key.created_at)) }}</p>
                   </div>
                   <button
                     type="button"
@@ -91,7 +92,14 @@
                     </DialogTitle>
                     <div class="mt-2">
                       <p class="text-sm text-gray-500">
-                        Введите название для нового API ключа
+                        Введите название для нового API ключа. После создания ключ будет показан только один раз.
+                      </p>
+                    </div>
+                    <div v-if="newKeyData" class="mt-4 p-4 bg-gray-50 rounded-md">
+                      <p class="text-sm font-medium text-gray-900">Ваш новый API ключ:</p>
+                      <p class="mt-2 font-mono text-sm text-gray-600 break-all">{{ newKeyData.key }}</p>
+                      <p class="mt-2 text-sm text-gray-500">
+                        Сохраните этот ключ! Он будет показан только один раз.
                       </p>
                     </div>
                     <div class="mt-4">
@@ -130,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import {
   Dialog,
   DialogPanel,
@@ -139,14 +147,16 @@ import {
   TransitionRoot,
 } from '@headlessui/vue'
 
-// Mock data for development
-interface ApiKey {
-  id: string
+import type { IApiKey } from '@/interfaces/api-key'
+import { generateApiKey, maskApiKey } from '@/utilities/api-key'
+
+interface NewKeyData {
+  key: string
   name: string
-  created: Date
 }
 
-const apiKeys = ref<ApiKey[]>([])
+const apiKeys = ref<IApiKey[]>([])
+const newKeyData = ref<NewKeyData | null>(null)
 const isModalOpen = ref(false)
 const newKeyName = ref('')
 
@@ -165,16 +175,35 @@ function createNewKey() {
 function closeModal() {
   isModalOpen.value = false
   newKeyName.value = ''
+  newKeyData.value = null
 }
 
 function confirmCreateKey() {
   if (newKeyName.value.trim()) {
-    // Mock API key creation
-    apiKeys.value.push({
+    const key = generateApiKey()
+    const newKey: IApiKey = {
       id: Math.random().toString(36).substring(7),
       name: newKeyName.value,
-      created: new Date()
+      key: key,
+      created_at: new Date().toISOString(),
+      is_active: true
+    }
+    
+    // Сохраняем ключ для показа пользователю
+    newKeyData.value = {
+      key: key,
+      name: newKeyName.value
+    }
+    
+    // Добавляем замаскированную версию в список
+    apiKeys.value.push({
+      ...newKey,
+      key: maskApiKey(key)
     })
+    
+    // В будущем здесь будет отправка на бэкенд
+    // await createApiKey(newKey)
+    
     closeModal()
   }
 }
@@ -182,4 +211,16 @@ function confirmCreateKey() {
 function revokeKey(keyId: string) {
   apiKeys.value = apiKeys.value.filter(key => key.id !== keyId)
 }
+
+onMounted(() => {
+  // Добавляем тестовый ключ для проверки отображения
+  const testKey = generateApiKey()
+  apiKeys.value.push({
+    id: '1',
+    name: 'Тестовый ключ',
+    key: maskApiKey(testKey),
+    created_at: new Date().toISOString(),
+    is_active: true
+  })
+})
 </script>

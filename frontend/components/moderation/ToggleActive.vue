@@ -24,8 +24,8 @@ async function submit() {
     const { data: response } = await apiAuth.toggleUserState(token.token, data)
     if (!response.value || !response.value.msg) {
         toast.addNotice({
-            title: "Update error",
-            content: response.value ? response.value.msg : "Invalid request.",
+            title: "Ошибка обновления",
+            content: response.value ? response.value.msg : "Неверный запрос.",
             icon: "error"
         })
         checkState.value = props.check

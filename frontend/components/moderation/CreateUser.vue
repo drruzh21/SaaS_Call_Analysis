@@ -3,7 +3,7 @@
       <Form @submit="submit" :validation-schema="schema">
         <div class="space-y-6 bg-white py-6 px-4 sm:p-6">
           <div>
-            <label for="full_name" class="block text-sm font-medium text-gray-700">Profile name</label>
+            <label for="full_name" class="block text-sm font-medium text-gray-700">Имя профиля</label>
             <div class="mt-1 group relative inline-block w-full">
               <Field 
                 id="full_name" 
@@ -16,7 +16,7 @@
           </div>
 
           <div class="space-y-1">
-            <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email адрес</label>
             <div class="mt-1 group relative inline-block w-full">
               <Field 
                 id="email" 
@@ -31,7 +31,7 @@
         </div>
         <div class="py-3 pb-6 text-right sm:px-6">
           <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-rose-500 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-600 focus:ring-offset-2">
-            Submit
+            Создать
           </button>
         </div>
       </Form>
@@ -63,14 +63,14 @@ async function submit(values: any, { resetForm }) {
     const { data: response } = await apiAuth.createUserProfile(token.token, data)
     if (!response.value) {
         toast.addNotice({
-            title: "Update error",
-            content: "Invalid request.",
+            title: "Ошибка обновления",
+            content: "Неверный запрос.",
             icon: "error"
         })
     } else {
       toast.addNotice({
-            title: "User created",
-            content: "An email has been sent to the user with their new login details."
+            title: "Пользователь создан",
+            content: "На указанный email отправлены данные для входа."
         })
       resetForm()
     }
