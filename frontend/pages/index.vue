@@ -7,53 +7,43 @@
             <div class="mt-10">
               <div>
                 <div class="inline-flex space-x-4">
-                  <NuxtLinkLocale to="/about" class="rounded bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-500">Key features</NuxtLinkLocale>
-                  <a :href="github.href" class="inline-flex space-x-4">
-                    <span class="inline-flex items-center space-x-1 text-sm font-medium text-rose-500">
-                      <span class="inline-flex items-center space-x-1 text-sm font-medium text-rose-400">
-                        <component :is="github.icon" class="h-5 w-5" aria-hidden="true" />
-                      </span>
-                      <span>Source repository</span>
-                      <ChevronRightIcon class="h-5 w-5" aria-hidden="true" />
-                    </span>
-                  </a>
+                  <NuxtLinkLocale to="/about" class="rounded bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-500">Возможности</NuxtLinkLocale>
                 </div>
               </div>
               <div class="mt-6 sm:max-w-xl">
-                <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">FastAPI/Nuxt starter stack</h1>
-                <p class="mt-6 text-xl text-gray-500">Accelerate your next web development project with this FastAPI 0.109 / Nuxt.js 3.11 base project generator.</p>
+                <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">Платформа анализа звонков</h1>
+                <p class="mt-6 text-xl text-gray-500">Продвинутая платформа анализа звонков с фильтрацией на основе GPT и аналитикой на базе искусственного интеллекта для лучшего понимания коммуникаций.</p>
               </div>
               <div class="mt-6 sm:max-w-xl">
                 <ul class="list-disc ml-6 text-gray-600">
                   <li>
-                    <span class="font-bold">Authentication</span> user management schemas, models, crud and apis, with 
-                    OAuth2 JWT token `access` and `refresh` support & default hashing.
+                    <span class="font-bold">GPT Фильтрация</span> - Продвинутая система фильтрации для анализа звонков на основе нейросетей
                   </li>
                   <li>
-                    <span class="font-bold">Authorisation</span> via middleware for page access, including logged in or superuser.
+                    <span class="font-bold">AI Анализ</span> - Современные модели искусственного интеллекта для анализа контента
                   </li>
                   <li>
-                    <span class="font-bold">Schemas</span> with Pydantic 2.0 and TypeScript interfaces.
+                    <span class="font-bold">Обработка в реальном времени</span> - Мгновенная обработка и анализ звонков
                   </li>
                   <li>
-                    <span class="font-bold">Databases</span> for Neo4j and PostgreSQL included, plus PGAdmin for PostgreSQL management, using SQLAlchemy 2.0.
+                    <span class="font-bold">Безопасное хранение</span> - Корпоративный уровень защиты ваших данных
                   </li>
                   <li>
-                    <span class="font-bold">Form validation</span> with Vee-Validate 4.
+                    <span class="font-bold">Аналитическая панель</span> - Комплексные инструменты аналитики и отчетности
                   </li>
                   <li>
-                    <span class="font-bold">State management</span> with Pinia, and persistance with Pinia PersistedState.
-                  </li>
-                  <li>
-                    <span class="font-bold">CSS and templates</span> with TailwindCSS, HeroIcons, and HeadlessUI.
-                  </li>
-                  <li>
-                    <span class="font-bold">Content management</span> with Nuxt Content for writing Markdown pages.
-                  </li>
-                  <li>
-                    <span class="font-bold">Internationalisation</span> with Nuxt i18n.
+                    <span class="font-bold">Командная работа</span> - Делитесь аналитикой и работайте вместе с коллегами
                   </li>
                 </ul>
+              </div>
+              <div class="mt-8">
+                <NuxtLinkLocale 
+                  :to="startWorkRoute" 
+                  class="inline-flex items-center rounded-md border border-transparent bg-rose-500 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-rose-600"
+                >
+                  Начать работу
+                  <ChevronRightIcon class="ml-2 h-5 w-5" aria-hidden="true" />
+                </NuxtLinkLocale>
               </div>
             </div>
           </div>
@@ -73,7 +63,7 @@
               </svg>
             </div>
             <div class="relative -mr-40 pl-4 sm:mx-auto sm:max-w-3xl sm:px-0 lg:h-full lg:max-w-none lg:pl-12">
-              <img class="w-full rounded-md shadow-xl ring-1 ring-black ring-opacity-5 lg:h-full lg:w-auto lg:max-w-none" src="https://images.unsplash.com/photo-1465661668481-15b9405ca28e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&flip=h&w=1074&q=80" alt="" />
+              <img class="w-full rounded-md shadow-xl ring-1 ring-black ring-opacity-5 lg:h-full lg:w-auto lg:max-w-none" src="https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80" alt="Панель анализа звонков" />
             </div>
           </div>
         </div>
@@ -85,14 +75,25 @@
 import { ChevronRightIcon } from "@heroicons/vue/20/solid"
 import { tokenIsTOTP } from "@/utilities"
 import { useAuthStore, useTokenStore } from "@/stores"
+import { computed } from 'vue'
 
 definePageMeta({
-  layout: "home",
+  layout: "default",
 });
 
 const authStore = useAuthStore()
 const tokenStore = useTokenStore()
 const route = useRoute()
+
+/**
+ * Computed property that determines the target route for the "Start Work" button
+ * Returns '/ai-filter' if user is authenticated, '/login' otherwise
+ * @returns {string} Target route path
+ */
+const startWorkRoute = computed(() => {
+    return authStore.loggedIn ? '/ai-filter' : '/login'
+})
+
 const redirectTOTP = "/totp"
 const redirectAfterLogin = "/"
 const github = {

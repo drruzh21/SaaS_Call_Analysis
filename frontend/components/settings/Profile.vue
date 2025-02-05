@@ -3,12 +3,12 @@
       <Form @submit="submit" :validation-schema="schema">
         <div class="space-y-6 bg-white py-6 px-4 sm:p-6">
           <div>
-            <h3 class="text-lg font-medium leading-6 text-gray-900">{{  title }}</h3>
-            <p class="mt-1 text-sm text-gray-500">{{  description }}</p>
+            <h3 class="text-lg font-medium leading-6 text-gray-900">{{ title }}</h3>
+            <p class="mt-1 text-sm text-gray-500">{{ description }}</p>
           </div>
 
           <div class="space-y-1">
-            <label for="original" class="block text-sm font-medium text-gray-700">Original password</label>
+            <label for="original" class="block text-sm font-medium text-gray-700">Текущий пароль</label>
             <div class="mt-1 group relative inline-block w-full">
               <Field id="original" name="original" type="password" autocomplete="password" class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-rose-600 focus:outline-none focus:ring-rose-600 sm:text-sm" />
               <ErrorMessage name="original" class="absolute left-5 top-5 translate-y-full w-48 px-2 py-1 bg-gray-700 rounded-lg text-center text-white text-sm after:content-[''] after:absolute after:left-1/2 after:bottom-[100%] after:-translate-x-1/2 after:border-8 after:border-x-transparent after:border-t-transparent after:border-b-gray-700"/>
@@ -16,7 +16,7 @@
           </div>
 
           <div class="space-y-1">
-            <label for="full_name" class="block text-sm font-medium text-gray-700">Your name</label>
+            <label for="full_name" class="block text-sm font-medium text-gray-700">Ваше имя</label>
             <div class="mt-1 group relative inline-block w-full">
               <Field 
                 id="full_name" 
@@ -25,12 +25,12 @@
                 v-model="profile.full_name"
                 class="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-rose-500 focus:outline-none focus:ring-rose-500 sm:text-sm" 
               />
-              <ErrorMessage name="email" class="absolute left-5 top-5 translate-y-full w-48 px-2 py-1 bg-gray-700 rounded-lg text-center text-white text-sm after:content-[''] after:absolute after:left-1/2 after:bottom-[100%] after:-translate-x-1/2 after:border-8 after:border-x-transparent after:border-t-transparent after:border-b-gray-700"/>
+              <ErrorMessage name="full_name" class="absolute left-5 top-5 translate-y-full w-48 px-2 py-1 bg-gray-700 rounded-lg text-center text-white text-sm after:content-[''] after:absolute after:left-1/2 after:bottom-[100%] after:-translate-x-1/2 after:border-8 after:border-x-transparent after:border-t-transparent after:border-b-gray-700"/>
             </div>
           </div>
 
           <div class="space-y-1">
-            <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email адрес</label>
             <div class="mt-1 group relative inline-block w-full">
               <Field 
                 id="email" 
@@ -46,7 +46,7 @@
         </div>
         <div class="py-3 pb-6 text-right sm:px-6">
           <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-rose-500 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-600 focus:ring-offset-2">
-            Submit
+            Сохранить
           </button>
         </div>
       </Form>
@@ -59,8 +59,8 @@ import type { IUserProfileUpdate } from "@/interfaces"
 
 const authStore = useAuthStore()
 let profile = {} as IUserProfileUpdate
-const title = "Personal settings"
-const description = "Changing your email address will change your login. Any changes will require you to enter your original password."
+const title = "Настройки профиля"
+const description = "Изменение email адреса изменит ваш логин. Для любых изменений потребуется ввести текущий пароль."
 
 const schema = {
     original: { required: authStore.profile.password, min: 8, max: 64 },

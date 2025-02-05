@@ -3,19 +3,17 @@
     <Form @submit="submit" :validation-schema="schema">
       <div class="space-y-6 bg-white py-6 px-4 sm:p-6">
         <div>
-          <h3 class="text-lg font-medium leading-6 text-gray-900">{{  title }}</h3>
+          <h3 class="text-lg font-medium leading-6 text-gray-900">{{ title }}</h3>
           <p v-if="!authStore.profile.password" class="mt-1 text-sm text-gray-500">
-            Secure your account by adding a password, or enabling two-factor security. Or both. Any changes will 
-            require you to enter your original password.
+            Защитите свой аккаунт, добавив пароль или включив двухфакторную аутентификацию. Или и то, и другое. Для любых изменений потребуется ввести текущий пароль.
           </p>
           <p v-else class="mt-1 text-sm text-gray-500">
-            Secure your account further by enabling two-factor security. Any changes will require you to enter 
-            your original password.
+            Усильте защиту аккаунта, включив двухфакторную аутентификацию. Для любых изменений потребуется ввести текущий пароль.
           </p>
         </div>
 
         <div class="space-y-1">
-          <label for="original" class="block text-sm font-medium text-gray-700">Original password</label>
+          <label for="original" class="block text-sm font-medium text-gray-700">Текущий пароль</label>
           <div class="mt-1 group relative inline-block w-full">
             <Field id="original" name="original" type="password" autocomplete="password" class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-rose-600 focus:outline-none focus:ring-rose-600 sm:text-sm" />
             <ErrorMessage name="original" class="absolute left-5 top-5 translate-y-full w-48 px-2 py-1 bg-gray-700 rounded-lg text-center text-white text-sm after:content-[''] after:absolute after:left-1/2 after:bottom-[100%] after:-translate-x-1/2 after:border-8 after:border-x-transparent after:border-t-transparent after:border-b-gray-700"/>
@@ -25,10 +23,10 @@
         <div class="space-y-1">
           <div class="flex items-center justify-between">
             <p class="text-sm font-medium text-rose-500 align-middle">
-              Use two-factor security
+              Использовать двухфакторную аутентификацию
             </p>
             <Switch v-model="totpEnabled" class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-rose-600 focus:ring-offset-2">
-              <span class="sr-only">Use setting</span>
+              <span class="sr-only">Использовать настройку</span>
               <span aria-hidden="true" class="pointer-events-none absolute h-full w-full rounded-md bg-white" />
               <span aria-hidden="true" :class="[totpEnabled ? 'bg-rose-500' : 'bg-gray-200', 'pointer-events-none absolute mx-auto h-4 w-9 rounded-full transition-colors duration-200 ease-in-out']" />
               <span aria-hidden="true" :class="[totpEnabled ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full border border-gray-200 bg-white shadow ring-0 transition-transform duration-200 ease-in-out']" />
@@ -36,7 +34,7 @@
         </div>
       </div>
         <div class="space-y-1">
-          <label for="password" class="block text-sm font-medium text-gray-700">New password</label>
+          <label for="password" class="block text-sm font-medium text-gray-700">Новый пароль</label>
           <div class="mt-1 group relative inline-block w-full">
             <Field id="password" name="password" type="password" autocomplete="password" class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-rose-600 focus:outline-none focus:ring-rose-600 sm:text-sm" />
             <ErrorMessage name="password" class="absolute left-5 top-5 translate-y-full w-48 px-2 py-1 bg-gray-700 rounded-lg text-center text-white text-sm after:content-[''] after:absolute after:left-1/2 after:bottom-[100%] after:-translate-x-1/2 after:border-8 after:border-x-transparent after:border-t-transparent after:border-b-gray-700"/>
@@ -44,7 +42,7 @@
         </div>
 
         <div class="space-y-1">
-          <label for="confirmation" class="block text-sm font-medium text-gray-700">Repeat new password</label>
+          <label for="confirmation" class="block text-sm font-medium text-gray-700">Повторите новый пароль</label>
           <div class="mt-1 group relative inline-block w-full">
             <Field id="confirmation" name="confirmation" type="password" autocomplete="confirmation" class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-rose-600 focus:outline-none focus:ring-rose-600 sm:text-sm" />
             <ErrorMessage name="confirmation" class="absolute left-5 top-5 translate-y-full w-48 px-2 py-1 bg-gray-700 rounded-lg text-center text-white text-sm after:content-[''] after:absolute after:left-1/2 after:bottom-[100%] after:-translate-x-1/2 after:border-8 after:border-x-transparent after:border-t-transparent after:border-b-gray-700"/>
@@ -53,7 +51,7 @@
       </div>
       <div class="py-3 pb-6 text-right sm:px-6">
         <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-rose-500 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-600 focus:ring-offset-2">
-          Submit
+          Сохранить
         </button>
       </div>
     </Form>
@@ -72,7 +70,7 @@
                   <QrCodeIcon class="h-6 w-6 text-rose-500" aria-hidden="true" />
                 </div>
                 <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">Enable two-factor security</DialogTitle>
+                  <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">Включение двухфакторной аутентификации</DialogTitle>
                   <div class="mt-2 max-w-lg">
                     <ul role="list" class="space-y-3">
                       <li class="flex items-start">
@@ -80,8 +78,7 @@
                           1
                         </div>
                         <p class="ml-3 text-sm leading-6 text-gray-600">
-                          Download an authenticator app that supports Time-based One-Time Password (TOTP) for your mobile
-                          device.
+                          Скачайте приложение-аутентификатор с поддержкой одноразовых паролей (TOTP) на ваше мобильное устройство.
                         </p>
                       </li>
                       <li class="flex items-start">
@@ -90,11 +87,11 @@
                         </div>
                         <div class="ml-3 text-sm leading-6 text-gray-600">
                           <p>
-                            Open the app and scan the QR code below to pair your mobile with your account.
+                            Откройте приложение и отсканируйте QR-код ниже, чтобы привязать ваше устройство к аккаунту.
                           </p>
                           <QrcodeVue :value="totpNew.uri" :size="qrSize" level="M" render-as="svg" class="my-2 mx-auto"/>
                           <p>
-                            If you can't scan, you can type in the following key:
+                            Если сканирование невозможно, введите следующий ключ:
                           </p>
                           <p class="text-md font-semibold my-2 text-center">{{ totpNew.key }}</p>
                         </div>
@@ -105,23 +102,23 @@
                         </div>
                         <div class="ml-3 text-sm leading-6 text-gray-600">
                           <p>
-                            Enter the code generated by your Authenticator app below to pair your account:
+                            Введите код, сгенерированный вашим приложением-аутентификатором, для привязки аккаунта:
                           </p>
                           <Form @submit="enableTOTP" :validation-schema="totpSchema">
                             <div class="space-y-1">
-                              <label for="claim" class="block text-sm font-medium text-gray-700 mt-4">6-digit verification code</label>
+                              <label for="claim" class="block text-sm font-medium text-gray-700 mt-4">6-значный код подтверждения</label>
                               <div class="mt-1 group relative inline-block w-full">
                                 <Field id="claim" name="claim" type="text" autocomplete="off" class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-rose-600 focus:outline-none focus:ring-rose-600 sm:text-sm" />
                               </div>
                             </div>
                             <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                               <button type="submit" class="inline-flex w-full justify-center rounded-md border border-transparent bg-rose-500 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm">
-                                Submit
+                                Сохранить
                               </button>
                               <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm" 
                                 @click="totpModal = false" 
                                 ref="cancelButtonRef">
-                                Cancel
+                                Отмена
                               </button>
                             </div>
                           </Form>

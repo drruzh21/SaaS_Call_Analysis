@@ -29,7 +29,7 @@
                 :is="UsersIcon" 
                 class="text-gray-400 group-hover:text-gray-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" aria-hidden="true" 
               />
-              <span class="truncate">Moderation</span>
+              <span class="truncate">Модерация</span>
             </button>
             <SettingsValidateEmailButton v-if="!authStore.profile.email_validated"/>
           </nav>
@@ -41,6 +41,9 @@
           <div v-if="selected === 'SECURITY'">
             <SettingsSecurity />
           </div>
+          <div v-if="selected === 'API_KEYS'">
+            <SettingsApiKeys />
+          </div>
         </div>
       </div>
     </div>
@@ -48,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { KeyIcon, UserCircleIcon, UsersIcon } from "@heroicons/vue/24/outline"
+import { KeyIcon, UserCircleIcon, UsersIcon, CommandLineIcon } from "@heroicons/vue/24/outline"
 import { useAuthStore } from "@/stores"
 
 definePageMeta({
@@ -59,11 +62,12 @@ const localePath = useLocalePath()
 const authStore = useAuthStore()
 
 const navigation = [
-  { name: "Account", id: "ACCOUNT", icon: UserCircleIcon },
-  { name: "Security", id: "SECURITY", icon: KeyIcon },
+  { name: "Аккаунт", id: "ACCOUNT", icon: UserCircleIcon },
+  { name: "Безопасность", id: "SECURITY", icon: KeyIcon },
+  { name: "API ключи", id: "API_KEYS", icon: CommandLineIcon },
 ]
-const title = "Settings"
-const description = "Update your personal settings, or delete your account."
+const title = "Настройки"
+const description = "Обновите настройки вашего аккаунта или удалите его."
 const selected = ref("ACCOUNT")
 
 async function navigateToModeration() {
