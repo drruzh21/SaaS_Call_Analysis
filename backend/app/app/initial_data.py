@@ -1,16 +1,16 @@
+import asyncio
+import json
 import logging
 from pathlib import Path
-import json
-from passlib.totp import generate_secret
-import asyncio
 
-from app.gdb.init_gdb import init_gdb
+from passlib.totp import generate_secret
+from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
+
+from app.core.config import settings
 from app.db.init_db import init_db
 from app.db.session import async_session
 from app.gdb import NeomodelConfig
-from app.core.config import settings
-
-from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
+from app.gdb.init_gdb import init_gdb
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

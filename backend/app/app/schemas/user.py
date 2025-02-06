@@ -1,7 +1,11 @@
 from typing import Optional
 from uuid import UUID
-from pydantic import field_validator, StringConstraints, ConfigDict, BaseModel, Field, EmailStr
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
 from typing_extensions import Annotated
+
+from app.core.constants import MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH
+from app.core.validators import validate_email, validate_full_name, validate_password
 
 
 class UserLogin(BaseModel):
@@ -21,13 +25,51 @@ class UserBase(BaseModel):
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     email: EmailStr
-    password: Optional[Annotated[str, StringConstraints(min_length=8, max_length=64)]] = None
+    password: Optional[Annotated[str, StringConstraints(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)]] = None
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v):
+        return validate_email(v)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v):
+        return validate_password(v)
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_full_name(cls, v):
+        if v:
+            return validate_full_name(v)
+        return v
 
 
 # Properties to receive via API on update
 class UserUpdate(UserBase):
-    original: Optional[Annotated[str, StringConstraints(min_length=8, max_length=64)]] = None
-    password: Optional[Annotated[str, StringConstraints(min_length=8, max_length=64)]] = None
+    original: Optional[Annotated[str, StringConstraints(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)]] = None
+    password: Optional[Annotated[str, StringConstraints(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)]] = None
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v):
+        if v:
+            return validate_email(v)
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v):
+        if v:
+            return validate_password(v)
+        return v
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_full_name(cls, v):
+        if v:
+            return validate_full_name(v)
+        return v
 
 
 class UserInDBBase(UserBase):

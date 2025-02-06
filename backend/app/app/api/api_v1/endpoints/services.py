@@ -3,8 +3,8 @@ from typing import Any
 from fastapi import APIRouter
 
 from app import schemas
-from app.utilities import send_web_contact_email
 from app.schemas import EmailContent
+from app.utilities import send_web_contact_email
 
 router = APIRouter()
 

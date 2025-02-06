@@ -1,11 +1,12 @@
 """AI agent for analyzing objections in sales calls."""
 
-from app.ai.ai_agents.i_gpt_analyzer import IGptAnalyzer
-from app.ai.prompts.objections_analyzer_prompt import OBJECTIONS_ANALYZER_PROMPT
-from app.ai.structured_output_models.objections_analysis_model import ObjectionsAnalysis
-from app.ai.openai_llm_service import OpenAILLMService
 import logging
 from typing import Any
+
+from app.ai.ai_agents.i_gpt_analyzer import IGptAnalyzer
+from app.ai.openai_llm_service import OpenAILLMService
+from app.ai.prompts.objections_analyzer_prompt import OBJECTIONS_ANALYZER_PROMPT
+from app.ai.structured_output_models.objections_analysis_model import ObjectionsAnalysis
 
 logger = logging.getLogger(__name__)
 

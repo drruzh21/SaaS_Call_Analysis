@@ -1,11 +1,12 @@
 from __future__ import annotations
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from app.crud.base import CRUDBase
-from app.models import User, Token
-from app.schemas import RefreshTokenCreate, RefreshTokenUpdate
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
+from app.crud.base import CRUDBase
+from app.models import Token, User
+from app.schemas import RefreshTokenCreate, RefreshTokenUpdate
 
 
 class CRUDToken(CRUDBase[Token, RefreshTokenCreate, RefreshTokenUpdate]):

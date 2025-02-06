@@ -1,10 +1,11 @@
+from datetime import datetime
+
+import pytz
 from neomodel import (
-    StructuredRel,
     BooleanProperty,
     DateTimeProperty,
+    StructuredRel,
 )
-from datetime import datetime
-import pytz
 
 
 class ResourceRelationship(StructuredRel):

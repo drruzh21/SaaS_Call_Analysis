@@ -1,4 +1,4 @@
-from typing import Dict, AsyncGenerator
+from typing import AsyncGenerator, Dict
 
 import pytest
 from httpx import AsyncClient

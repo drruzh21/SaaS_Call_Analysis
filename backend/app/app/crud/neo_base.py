@@ -1,9 +1,10 @@
-from typing import Generic, List, Optional, Type, TypeVar, Union
-from pydantic import BaseModel
-from neomodel import db, Q, One, CardinalityViolation
-from uuid import UUID
 import inspect
+from typing import Generic, List, Optional, Type, TypeVar, Union
+from uuid import UUID
+
+from neomodel import CardinalityViolation, One, Q, db
 from neomodel.relationship_manager import RelationshipDefinition, ZeroOrMore
+from pydantic import BaseModel
 
 from app.gdb import NeomodelConfig, NodeBase
 

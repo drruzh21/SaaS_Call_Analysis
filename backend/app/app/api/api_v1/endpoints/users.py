@@ -7,8 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas
 from app.api import deps
-from app.core.config import settings
 from app.core import security
+from app.core.config import settings
+from app.core.validators import validate_email, validate_full_name, validate_password, validate_user_exists
 from app.utilities import (
     send_new_account_email,
 )
@@ -27,12 +28,11 @@ async def create_user_profile(
     """
     Create new user without the need to be logged in.
     """
-    user = await crud.user.get_by_email(db, email=email)
-    if user:
-        raise HTTPException(
-            status_code=400,
-            detail="This username is not available.",
-        )
+    await validate_email(email)
+    await validate_password(password)
+    await validate_full_name(full_name)
+    await validate_user_exists(db, email)
+
     # Create user auth
     user_in = schemas.UserCreate(password=password, email=email, full_name=full_name)
     user = await crud.user.create(db, obj_in=user_in)
@@ -49,6 +49,13 @@ async def update_user(
     """
     Update user.
     """
+    if obj_in.email:
+        await validate_email(obj_in.email)
+    if obj_in.password:
+        await validate_password(obj_in.password)
+    if obj_in.full_name:
+        await validate_full_name(obj_in.full_name)
+
     if current_user.hashed_password:
         user = await crud.user.authenticate(db, email=current_user.email, password=obj_in.original)
         if not obj_in.original or not user:

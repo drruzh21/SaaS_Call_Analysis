@@ -1,9 +1,11 @@
 from __future__ import annotations
-from pydantic import ConfigDict, BaseModel, Field
+
+import json
+from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
-from datetime import date, datetime
-import json
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schema_types import BaseEnum
 

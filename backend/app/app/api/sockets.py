@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from fastapi import WebSocket
 from starlette.websockets import WebSocketDisconnect, WebSocketException
 

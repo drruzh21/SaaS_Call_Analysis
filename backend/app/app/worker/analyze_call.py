@@ -1,24 +1,24 @@
 """Celery task for analyzing sales calls."""
 
-import logging
 import asyncio
-from typing import Optional, Dict, Any
+import logging
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from celery import Task
-from sqlalchemy.orm import Session
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from app import crud
+from app.ai.ai_agents.call_metrics_analyzer import CallMetricsAnalyzer
+from app.ai.ai_agents.call_overall_analyzer import CallOverallAnalyzer
+from app.ai.ai_agents.objections_analyzer import ObjectionsAnalyzer
+from app.ai.companies_orchestrators.v1_orchestrator import V1Orchestrator
 from app.core.celery_app import celery_app
 from app.db.session import async_session
 from app.models.call_analysis import CallAnalysisResult, Objection
 from app.schemas.task import CallAnalysisRequest
-from app.ai.companies_orchestrators.v1_orchestrator import V1Orchestrator
-from app.ai.ai_agents.call_metrics_analyzer import CallMetricsAnalyzer
-from app.ai.ai_agents.call_overall_analyzer import CallOverallAnalyzer
-from app.ai.ai_agents.objections_analyzer import ObjectionsAnalyzer
 
 logger = logging.getLogger(__name__)
 

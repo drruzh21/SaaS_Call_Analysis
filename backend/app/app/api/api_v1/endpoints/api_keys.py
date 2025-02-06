@@ -1,10 +1,11 @@
 from typing import Annotated, Any
-from fastapi import APIRouter, Depends, HTTPException
+
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import UUID
 
 from app import crud, models, schemas
 from app.api import deps
+from app.core.validators import validate_api_key_exists, validate_api_key_is_active, validate_api_key_ownership
 
 router = APIRouter()
 
@@ -33,10 +34,11 @@ async def update_api_key(
     obj_in: schemas.APIKeyUpdate,
     current_user: Annotated[models.User, Depends(deps.get_current_active_user)],
 ) -> Any:
-    db_obj = await crud.api_key.get_by_key(db=db, key=key, check_active=False)
-    if not db_obj or db_obj.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="API key not found")
-    return await crud.api_key.update(db=db, db_obj=db_obj, obj_in=obj_in, user_id=current_user.id)
+    api_key = await validate_api_key_exists(db, key)
+    await validate_api_key_ownership(api_key, current_user)
+    await validate_api_key_is_active(api_key)
+    return await crud.api_key.update(db=db, db_obj=api_key, obj_in=obj_in, user_id=current_user.id)
+
 
 @router.delete("/{key}", response_model=schemas.Msg)
 async def delete_api_key(
@@ -45,8 +47,7 @@ async def delete_api_key(
     key: str,
     current_user: Annotated[models.User, Depends(deps.get_current_active_user)],
 ) -> Any:
-    db_obj = await crud.api_key.get_by_key(db=db, key=key)
-    if not db_obj or db_obj.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="API key not found")
-    await crud.api_key.remove(db=db, db_obj=db_obj)
+    api_key = await validate_api_key_exists(db, key)
+    await validate_api_key_ownership(api_key, current_user)
+    await crud.api_key.remove(db=db, db_obj=api_key)
     return {"msg": "API key deleted"}

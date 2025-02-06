@@ -1,10 +1,10 @@
 import secrets
 from typing import Any, List, Optional
-from typing_extensions import Self
 
-from pydantic import field_validator, AnyHttpUrl, EmailStr, HttpUrl, PostgresDsn, computed_field, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import AnyHttpUrl, EmailStr, HttpUrl, PostgresDsn, computed_field, field_validator, model_validator
 from pydantic_core import MultiHostUrl
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing_extensions import Self
 
 
 class Settings(BaseSettings):
@@ -38,10 +38,6 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str
     SENTRY_DSN: Optional[HttpUrl] = None
-
-    # GENERAL SETTINGS
-
-    MULTI_MAX: int = 20
 
     # COMPONENT SETTINGS
 
