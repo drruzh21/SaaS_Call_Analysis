@@ -1,7 +1,7 @@
+import asyncio
 import logging
 from pathlib import Path
 from typing import Any, Dict
-import asyncio
 
 import emails
 from emails.template import JinjaTemplate

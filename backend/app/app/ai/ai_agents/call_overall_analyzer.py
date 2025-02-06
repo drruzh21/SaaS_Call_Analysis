@@ -4,10 +4,9 @@ import logging
 from typing import Any
 
 from app.ai.ai_agents.i_gpt_analyzer import IGptAnalyzer
+from app.ai.openai_llm_service import OpenAILLMService
 from app.ai.prompts.overall_analyzer_prompt import OVERALL_ANALYZER_PROMPT
 from app.ai.structured_output_models.call_overall_model import CallOverallAnalysis
-from app.ai.openai_llm_service import OpenAILLMService
-
 
 logger = logging.getLogger(__name__)
 

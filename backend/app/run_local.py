@@ -1,10 +1,12 @@
-import logging
 import asyncio
+import logging
+
 import uvicorn
 from sqlalchemy import text
-from app.db.session import async_session
-from app.core.config import settings
+
 from app.backend_pre_start import main as init_db
+from app.core.config import settings
+from app.db.session import async_session
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -1,7 +1,7 @@
 """First implementation of the call analysis orchestrator."""
 
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 from app.ai.ai_agents.call_metrics_analyzer import CallMetricsAnalyzer
 from app.ai.ai_agents.call_overall_analyzer import CallOverallAnalyzer

@@ -1,6 +1,7 @@
 from typing import Optional
-from pydantic import ConfigDict, BaseModel
 from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict
 
 
 class RefreshTokenBase(BaseModel):

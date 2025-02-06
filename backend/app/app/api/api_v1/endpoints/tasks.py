@@ -1,10 +1,10 @@
 """API endpoints for task management."""
 
 import logging
-from typing import Any, Annotated
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
+
 from app import models, schemas
 from app.api import deps
 from app.schemas.task import CallAnalysisRequest

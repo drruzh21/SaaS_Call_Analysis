@@ -1,6 +1,6 @@
-from typing import AsyncGenerator, Annotated
+from typing import Annotated, AsyncGenerator
 
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError

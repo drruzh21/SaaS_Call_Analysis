@@ -1,11 +1,13 @@
 from datetime import datetime
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, DateTime, Index, CheckConstraint
-from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import UUID
+from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
-from typing import Optional, TYPE_CHECKING
 
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, String
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import func
+
+from app.core.constants import MAX_API_NAME_LENGTH
 from app.db.base_class import Base
 
 if TYPE_CHECKING:
@@ -25,6 +27,10 @@ class APIKey(Base):
             'expires_at IS NULL OR expires_at > created_at',
             name='check_expiry_after_creation'
         ),
+        CheckConstraint(
+            f'char_length(name) <= {MAX_API_NAME_LENGTH}',
+            name='check_name_max_length'
+        ),
     )
 
     key: Mapped[str] = mapped_column(
@@ -35,6 +41,11 @@ class APIKey(Base):
     user_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("user.id", ondelete="CASCADE"),
+    )
+    
+    name: Mapped[str] = mapped_column(
+        String(MAX_API_NAME_LENGTH),
+        nullable=False,
     )
     
     created_at: Mapped[datetime] = mapped_column(
@@ -59,4 +70,4 @@ class APIKey(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<APIKey(key={self.key[:8]}..., user_id={self.user_id})>"
+        return f"<APIKey(key={self.key[:8]}..., user_id={self.user_id}, name={self.name})>"

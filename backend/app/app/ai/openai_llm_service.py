@@ -1,7 +1,8 @@
 from typing import Any, Type
+
 from openai import OpenAI
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
+
 from app.core.config import settings
 
 

@@ -1,11 +1,13 @@
 import inspect
-from neomodel import StructuredNode, install_labels, db
+
 from neo4j.exceptions import ClientError
+from neomodel import StructuredNode, db, install_labels
+
+import app.models
 
 # from neomodel import config
 # from app.core.config import settings
 
-import app.models
 
 # from app.gdb import NeomodelConfig
 

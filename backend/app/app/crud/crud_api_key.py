@@ -1,22 +1,25 @@
 import secrets
-from typing import Any, Optional, Union
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
-from uuid import UUID
 from datetime import datetime, timezone
+from typing import Any, Optional, Union
+from uuid import UUID
 
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.core.constants import MAX_API_KEY_GENERATION_ATTEMPTS, MAX_TOKEN_LENGTH
 from app.crud.base import CRUDBase
 from app.models import APIKey
 from app.schemas import APIKeyCreate, APIKeyUpdate
-from app.core.config import settings
+
 
 class CRUDAPIKey(CRUDBase[APIKey, APIKeyCreate, APIKeyUpdate]):
     """CRUD operations for API keys."""
 
-    async def _generate_unique_key(self, db: AsyncSession, max_attempts=10) -> str:
+    async def _generate_unique_key(self, db: AsyncSession, max_attempts=MAX_API_KEY_GENERATION_ATTEMPTS) -> str:
         """Generate a unique API key that doesn't exist in the database."""
         for _ in range(max_attempts):
-            key = secrets.token_urlsafe(32)
+            key = secrets.token_urlsafe(MAX_TOKEN_LENGTH)
             result = await db.execute(
                 select(func.count()).where(APIKey.key == key)
             )
@@ -111,11 +114,10 @@ class CRUDAPIKey(CRUDBase[APIKey, APIKeyCreate, APIKeyUpdate]):
         else:
             update_data = obj_in.model_dump(exclude_unset=True)
 
-        if 'expires_at' in update_data:
-            if update_data['expires_at'] and update_data['expires_at'] < datetime.now(timezone.utc):
-                raise ValueError("Expiry date cannot be in the past")
-
-        return await super().update(db, db_obj=db_obj, obj_in=update_data)
+        if 'is_active' in update_data:
+            return await super().update(db, db_obj=db_obj, obj_in={'is_active': update_data['is_active']})
+        
+        return db_obj
 
     async def remove(self, db: AsyncSession, *, db_obj: APIKey) -> None:
         """Remove an API key."""

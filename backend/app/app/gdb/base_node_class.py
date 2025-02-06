@@ -1,13 +1,14 @@
+from datetime import datetime
+
+import pytz
 from neomodel import (
-    StructuredNode,
-    StringProperty,
     BooleanProperty,
-    UniqueIdProperty,
     DateTimeProperty,
+    StringProperty,
+    StructuredNode,
+    UniqueIdProperty,
 )
 from neomodel.util import classproperty
-from datetime import datetime
-import pytz
 
 
 class NodeBase(StructuredNode):

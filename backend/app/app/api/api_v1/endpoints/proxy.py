@@ -1,11 +1,11 @@
 from typing import Annotated, Any
-from pydantic import AnyHttpUrl
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+
 import httpx
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from pydantic import AnyHttpUrl
 
 from app import models
 from app.api import deps
-
 
 router = APIRouter()
 
