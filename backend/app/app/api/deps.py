@@ -89,7 +89,7 @@ async def get_refresh_user(
         raise HTTPException(status_code=404, detail="User not found")
     if not await crud.user.is_active(user):
         raise HTTPException(status_code=400, detail="Inactive user")
-    token_obj = await crud.token.get(token=token, user=user)
+    token_obj = await crud.token.get(db=db, token=token, user=user)
     if not token_obj:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
