@@ -6,8 +6,7 @@ from uuid import UUID
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
-from app.core.constants import MAX_API_KEY_GENERATION_ATTEMPTS, MAX_TOKEN_LENGTH
+from app.core.constants import GET_MULTI_MAX, MAX_API_KEY_GENERATION_ATTEMPTS, MAX_TOKEN_LENGTH
 from app.crud.base import CRUDBase
 from app.models import APIKey
 from app.schemas import APIKeyCreate, APIKeyUpdate
@@ -72,7 +71,7 @@ class CRUDAPIKey(CRUDBase[APIKey, APIKeyCreate, APIKeyUpdate]):
         *, 
         user_id: UUID, 
         page: int = 0,
-        limit: int = settings.MULTI_MAX,
+        limit: int = GET_MULTI_MAX,
         include_expired: bool = False
     ) -> list[APIKey]:
         """Get multiple API keys for a user with pagination."""

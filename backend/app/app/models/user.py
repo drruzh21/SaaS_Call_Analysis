@@ -14,7 +14,6 @@ from app.core.constants import (
     MAX_FULL_NAME_LENGTH,
     MAX_GPT_FILTER_PROMPT_LENGTH,
 )
-from app.core.validators import validate_email, validate_gpt_filter_prompt
 from app.db.base_class import Base
 
 if TYPE_CHECKING:
@@ -81,8 +80,10 @@ class User(Base):
 
     @validates('email')
     def validate_email(self, key, email):
+        from app.core.validators import validate_email
         return validate_email(email)
 
     @validates('gpt_filter_prompt')
     def validate_gpt_filter_prompt(self, key, gpt_filter_prompt):
+        from app.core.validators import validate_gpt_filter_prompt
         return validate_gpt_filter_prompt(gpt_filter_prompt)

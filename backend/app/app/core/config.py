@@ -39,10 +39,6 @@ class Settings(BaseSettings):
     PROJECT_NAME: str
     SENTRY_DSN: Optional[HttpUrl] = None
 
-    # GENERAL SETTINGS
-
-    MULTI_MAX: int = 20
-
     # COMPONENT SETTINGS
 
     POSTGRES_SERVER: str
