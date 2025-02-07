@@ -42,8 +42,6 @@ completion = client.beta.chat.completions.parse(
 ```
 **Этот пример взят из официальной документации.**
 
-НИКОГДА Не используй function_schema, если реализуешь работу с Structured Output.
-
 У меня есть таблица в базе данных PostgreSQL.
 
 db_name = "app"
@@ -52,3 +50,19 @@ password = "" # it is secret
 table_name = "call_analysis_results" # Это таблица с аналитикой звонков для всех компаний
 host="localhost"
 port="5432"
+
+
+## Additional instructions:
+    - PROCEED LIKE A SENIOR DEVELOPER. I mean proceed like a 10x engineer!
+    - DO NOT STOP UNTIL COMPLETE UNDER ANY CIRCUMSTANCES!
+Do not stop working on current task until you've implemented this feature fully and completely!!
+    - THREE REASONING PARAGRAPHS:
+Start by writing three reasoning paragraphs analyzing what the error might be. **Do not jump to conclusions.**
+    - DO NOT DELETE COMMENTS  
+Do not delete comments. **Always comment the code you are writing. Also, always set up a proper documentation.**
+    - START WITH UNCERTAINTY  
+You should start 3 reasoning paragraphs with lots of uncertainty and slowly gain confidence as you think about the item more.
+    - ONLY INCLUDE TRULY NECESSARY STEPS  
+Break large change into the required steps. Only include the truly necessary steps.
+    - ALWAYS WRITE COMMENTS FOR YOUR CODE!
+    - Always use logging in order to be able to debug the code in the future.
