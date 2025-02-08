@@ -1,7 +1,7 @@
 <template>
     <main>
       <!-- Hero section -->
-      <div class="overflow-hidden pt-8 sm:pt-12 lg:relative lg:py-48">
+      <div class="overflow-hidden pt-6 sm:pt-8 lg:relative lg:py-20">
         <div class="mx-auto max-w-md px-4 sm:max-w-3xl sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-2 lg:gap-24 lg:px-8">
           <div>
             <div class="mt-10">
@@ -11,28 +11,25 @@
                 </div>
               </div>
               <div class="mt-6 sm:max-w-xl">
-                <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">Платформа анализа звонков</h1>
-                <p class="mt-6 text-xl text-gray-500">Продвинутая платформа анализа звонков с фильтрацией на основе GPT и аналитикой на базе искусственного интеллекта для лучшего понимания коммуникаций.</p>
+                <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">Интеллектуальный анализ коммуникаций на базе AI</h1>
+                <p class="mt-6 text-xl text-gray-500">Превращаем звонки в измеримые показатели. Автоматически выявляем ключевые метрики, тренды и зоны роста команды продаж.</p>
               </div>
               <div class="mt-6 sm:max-w-xl">
                 <ul class="list-disc ml-6 text-gray-600">
                   <li>
-                    <span class="font-bold">GPT Фильтрация</span> - Продвинутая система фильтрации для анализа звонков на основе нейросетей
+                    <span class="font-bold">Анализ скриптов</span> - Контроль соблюдения скриптов продаж без ручной проверки
                   </li>
                   <li>
-                    <span class="font-bold">AI Анализ</span> - Современные модели искусственного интеллекта для анализа контента
+                    <span class="font-bold">Метрики менеджеров</span> - Объективная оценка эффективности каждого сотрудника
                   </li>
                   <li>
-                    <span class="font-bold">Обработка в реальном времени</span> - Мгновенная обработка и анализ звонков
+                    <span class="font-bold">Командная аналитика</span> - Прозрачная статистика для руководителей и команды
                   </li>
                   <li>
-                    <span class="font-bold">Безопасное хранение</span> - Корпоративный уровень защиты ваших данных
+                    <span class="font-bold">Анализ возражений</span> - Отслеживание и анализ ключевых возражений клиентов
                   </li>
                   <li>
-                    <span class="font-bold">Аналитическая панель</span> - Комплексные инструменты аналитики и отчетности
-                  </li>
-                  <li>
-                    <span class="font-bold">Командная работа</span> - Делитесь аналитикой и работайте вместе с коллегами
+                    <span class="font-bold">Быстрый онбординг</span> - Сокращение времени обучения новых менеджеров
                   </li>
                 </ul>
               </div>
