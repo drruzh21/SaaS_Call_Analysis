@@ -1,10 +1,10 @@
 import re
-from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException, status
 
 from app.core.constants import EMAIL_REGEX, MAX_EMAIL_LENGTH, MAX_FULL_NAME_LENGTH, MIN_PASSWORD_LENGTH, SQL_PATTERNS
+
 
 async def validate_gpt_filter_prompt(prompt: Optional[str]) -> Optional[str]:
     if prompt is None:
@@ -56,12 +56,3 @@ async def validate_full_name(full_name: Optional[str]) -> Optional[str]:
         )
     return full_name
 
-async def validate_expiry(expires_at: Optional[datetime]) -> Optional[datetime]:
-    if expires_at and expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    if expires_at and expires_at < datetime.now(timezone.utc):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Expiration date cannot be in the past"
-        )
-    return expires_at

@@ -1,105 +1,122 @@
 from typing import Optional
 from uuid import UUID
-
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
+from datetime import datetime
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
 from typing_extensions import Annotated
 
 from app.core.constants import MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH
-from app.core.validators import validate_email, validate_full_name, validate_password
 
 
 class UserLogin(BaseModel):
-    username: str
-    password: str
+    """Schema for user login credentials."""
+    username: EmailStr = Field(..., description="User's email address")
+    password: Annotated[
+        str, 
+        StringConstraints(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)
+    ] = Field(..., description="User's password")
 
 
 # Shared properties
 class UserBase(BaseModel):
-    email: Optional[EmailStr] = None
-    email_validated: Optional[bool] = False
-    is_active: Optional[bool] = True
-    is_superuser: Optional[bool] = False
-    full_name: Optional[str] = None
+    """Base user schema with shared properties."""
+    email: Optional[EmailStr] = Field(None, description="User's email address")
+    email_validated: Optional[bool] = Field(False, description="Whether email is validated")
+    is_active: Optional[bool] = Field(True, description="Whether user account is active")
+    is_superuser: Optional[bool] = Field(False, description="Whether user has superuser privileges")
+    full_name: Optional[str] = Field(None, description="User's full name")
+    company_name_id: Optional[int] = Field(None, description="ID of user's company")
+    gpt_filter_prompt: Optional[str] = Field(None, description="Custom GPT filter prompt")
+    balance_rub: Optional[int] = Field(
+        None, 
+        description="User's balance in rubles",
+        ge=0
+    )
+    role: Optional[str] = Field(
+        "user",
+        description="User's role in the system"
+    )
 
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
-    email: EmailStr
-    password: Optional[Annotated[str, StringConstraints(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)]] = None
+    """Schema for creating a new user."""
+    email: EmailStr = Field(..., description="User's email address")
+    password: Optional[Annotated[
+        str, 
+        StringConstraints(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)
+    ]] = Field(None, description="User's password")
 
-    @field_validator("email")
-    @classmethod
-    def validate_email(cls, v):
-        return validate_email(v)
-
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, v):
-        return validate_password(v)
-
-    @field_validator("full_name")
-    @classmethod
-    def validate_full_name(cls, v):
-        if v:
-            return validate_full_name(v)
-        return v
+    model_config = ConfigDict(
+        json_schema_extra = {
+            "example": {
+                "email": "user@example.com",
+                "password": "strongpassword123",
+                "full_name": "John Doe",
+                "company_name_id": 1,
+                "role": "user"
+            }
+        }
+    )
 
 
 # Properties to receive via API on update
 class UserUpdate(UserBase):
-    original: Optional[Annotated[str, StringConstraints(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)]] = None
-    password: Optional[Annotated[str, StringConstraints(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)]] = None
+    """Schema for updating an existing user."""
+    original: Optional[Annotated[
+        str, 
+        StringConstraints(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)
+    ]] = Field(None, description="Original password for verification")
+    password: Optional[Annotated[
+        str, 
+        StringConstraints(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)
+    ]] = Field(None, description="New password")
 
-    @field_validator("email")
-    @classmethod
-    def validate_email(cls, v):
-        if v:
-            return validate_email(v)
-        return v
-
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, v):
-        if v:
-            return validate_password(v)
-        return v
-
-    @field_validator("full_name")
-    @classmethod
-    def validate_full_name(cls, v):
-        if v:
-            return validate_full_name(v)
-        return v
+    model_config = ConfigDict(
+        json_schema_extra = {
+            "example": {
+                "full_name": "John Doe Updated",
+                "original": "oldpassword123",
+                "password": "newpassword123"
+            }
+        }
+    )
 
 
 class UserInDBBase(UserBase):
-    id: Optional[UUID] = None
+    """Base schema for user in database."""
+    id: Optional[UUID] = Field(None, description="User's unique identifier")
+    hashed_password: Optional[str] = Field(None, description="Hashed password")
+    totp_secret: Optional[str] = Field(None, description="TOTP secret key")
+    created: Optional[datetime] = Field(None, description="Account creation timestamp")
+    modified: Optional[datetime] = Field(None, description="Last modification timestamp")
+
     model_config = ConfigDict(from_attributes=True)
 
 
-# Additional properties to return via API
 class User(UserInDBBase):
-    hashed_password: bool = Field(default=False, alias="password")
-    totp_secret: bool = Field(default=False, alias="totp")
-    model_config = ConfigDict(populate_by_name=True)
+    """Schema for user responses via API."""
+    hashed_password: Optional[str] = Field(default=None, alias="password")
+    totp_secret: Optional[str] = Field(default=None, alias="totp")
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra = {
+            "example": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "email": "user@example.com",
+                "full_name": "John Doe",
+                "company_name_id": 1,
+                "role": "user",
+                "balance_rub": 1000,
+                "is_active": True,
+                "email_validated": True
+            }
+        }
+    )
 
-    @field_validator("hashed_password", mode="before")
-    @classmethod
-    def evaluate_hashed_password(cls, hashed_password):
-        if hashed_password:
-            return True
-        return False
 
-    @field_validator("totp_secret", mode="before")
-    @classmethod
-    def evaluate_totp_secret(cls, totp_secret):
-        if totp_secret:
-            return True
-        return False
-
-
-# Additional properties stored in DB
 class UserInDB(UserInDBBase):
+    """Internal schema for user in database with sensitive fields."""
     hashed_password: Optional[str] = None
     totp_secret: Optional[str] = None
     totp_counter: Optional[int] = None
