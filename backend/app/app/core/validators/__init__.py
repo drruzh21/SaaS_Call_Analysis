@@ -6,5 +6,6 @@ from .user import (  # noqa: F401
     validate_password,
     validate_password_update,
     validate_user_exists,
+    validate_user_exists_by_id,
     validate_user_not_exists,
 )

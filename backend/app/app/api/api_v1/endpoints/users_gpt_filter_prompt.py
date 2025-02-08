@@ -10,6 +10,7 @@ from app.schemas.user_gpt_filter_prompt import (
     UserGPTFilterPromptRead,
     UserGPTFilterPromptUpdate,
 )
+from app.core.validators import validate_gpt_filter_prompt, validate_user_exists_by_id
 
 router = APIRouter()
 
@@ -42,20 +43,13 @@ async def update_user_gpt_filter_prompt(
     """
     Update current user's GPT filter prompt.
     """
-    try:
-        updated_user = await crud.user.update_gpt_filter_prompt(
-            db=db,
-            user_id=current_user.id,
-            gpt_filter_prompt=prompt_in.gpt_filter_prompt
-        )
-        if not updated_user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-        return {"gpt_filter_prompt": updated_user.gpt_filter_prompt}
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e)
-        )
+    await validate_gpt_filter_prompt(prompt_in.gpt_filter_prompt)
+    
+    await validate_user_exists_by_id(db, current_user.id)
+    
+    updated_user = await crud.user.update_gpt_filter_prompt(
+        db=db,
+        user_id=current_user.id,
+        gpt_filter_prompt=prompt_in.gpt_filter_prompt
+    )
+    return {"gpt_filter_prompt": updated_user.gpt_filter_prompt}

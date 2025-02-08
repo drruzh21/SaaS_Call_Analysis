@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Optional
+from typing import Optional, Any
 
 from fastapi import HTTPException, status
 from pydantic import EmailStr
@@ -212,7 +212,7 @@ async def validate_password_update(
         
     await validate_password(new_password)
     
-    
+
 async def validate_gpt_filter_prompt(prompt: str) -> str:
     """
     Comprehensive validation of GPT prompt.
@@ -238,3 +238,27 @@ async def validate_gpt_filter_prompt(prompt: str) -> str:
         )
     
     return sanitized
+
+
+async def validate_user_exists_by_id(db: AsyncSession, user_id: Any) -> models.User:
+    """
+    Validate that a user with the given ID exists.
+    
+    Args:
+        db: Database session
+        user_id: User ID to check
+        
+    Returns:
+        User object if found
+        
+    Raises:
+        HTTPException: If user not found
+    """
+    user = await crud.user.get(db, id=user_id)
+    if not user:
+        logger.warning(f"Missing user attempt: {user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    return user
