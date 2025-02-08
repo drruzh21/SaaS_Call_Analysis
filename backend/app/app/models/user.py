@@ -21,6 +21,13 @@ if TYPE_CHECKING:
 
 
 class User(Base):
+    """
+    SQLAlchemy model for User.
+    
+    Represents a user in the system with authentication, authorization, and business logic properties.
+    Each user can have multiple API keys and tokens, and has associated metadata like balance and company info.
+    """
+    
     __table_args__ = (
         CheckConstraint(
             f'char_length(full_name) <= {MAX_FULL_NAME_LENGTH}',
@@ -44,46 +51,110 @@ class User(Base):
         ),
     )
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
-    created: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    # Core fields
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), 
+        primary_key=True, 
+        index=True, 
+        default=uuid4,
+        nullable=False
+    )
+    created: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        server_default=func.now(), 
+        nullable=False,
+        comment="Timestamp when the user was created"
+    )
     modified: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         server_onupdate=func.now(),
         nullable=False,
+        comment="Timestamp when the user was last modified"
     )
-    # METADATA
-    full_name: Mapped[str] = mapped_column(index=True, nullable=True)
-    email: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
-    hashed_password: Mapped[Optional[str]] = mapped_column(nullable=True)
-    # AUTHENTICATION AND PERSISTENCE
-    totp_secret: Mapped[Optional[str]] = mapped_column(nullable=True)
-    totp_counter: Mapped[Optional[int]] = mapped_column(nullable=True)
-    email_validated: Mapped[bool] = mapped_column(default=False)
-    is_active: Mapped[bool] = mapped_column(default=True)
-    is_superuser: Mapped[bool] = mapped_column(default=False)
-    refresh_tokens: Mapped[list["Token"]] = relationship(
-        foreign_keys="[Token.authenticates_id]", back_populates="authenticates", lazy="dynamic"
+
+    # User metadata
+    full_name: Mapped[str] = mapped_column(
+        index=True, 
+        nullable=True,
+        comment="User's full name"
     )
-    api_keys: Mapped[list["APIKey"]] = relationship(back_populates="user", lazy="dynamic")
-    role: Mapped[str] = mapped_column(nullable=True, default="user")
-    balance_rub: Mapped[int] = mapped_column(nullable=True, default=0)
+    email: Mapped[str] = mapped_column(
+        unique=True, 
+        index=True, 
+        nullable=False,
+        comment="User's email address, used for authentication"
+    )
+    role: Mapped[str] = mapped_column(
+        nullable=False, 
+        default="user",
+        comment="User's role in the system (e.g., 'user', 'admin')"
+    )
+    
+    # Authentication fields
+    hashed_password: Mapped[Optional[str]] = mapped_column(
+        nullable=True,
+        comment="Hashed password for authentication"
+    )
+    totp_secret: Mapped[Optional[str]] = mapped_column(
+        nullable=True,
+        comment="Secret key for TOTP two-factor authentication"
+    )
+    totp_counter: Mapped[Optional[int]] = mapped_column(
+        nullable=True,
+        comment="Counter for TOTP authentication"
+    )
+    
+    # Account status
+    email_validated: Mapped[bool] = mapped_column(
+        default=False,
+        nullable=False,
+        comment="Whether the user's email has been validated"
+    )
+    is_active: Mapped[bool] = mapped_column(
+        default=True,
+        nullable=False,
+        comment="Whether the user account is active"
+    )
+    is_superuser: Mapped[bool] = mapped_column(
+        default=False,
+        nullable=False,
+        comment="Whether the user has superuser privileges"
+    )
+    
+    # Business logic fields
+    balance_rub: Mapped[int] = mapped_column(
+        nullable=False, 
+        default=0,
+        comment="User's balance in rubles"
+    )
     company_name_id: Mapped[int] = mapped_column(
         Integer,
         Sequence('user_company_name_id_seq'),
         server_default=text("nextval('user_company_name_id_seq')"),
         unique=True,
         index=True,
-        nullable=False
+        nullable=False,
+        comment="Unique identifier for the user's company"
     )
-    gpt_filter_prompt: Mapped[str] = mapped_column(nullable=True)
+    gpt_filter_prompt: Mapped[str] = mapped_column(
+        nullable=True,
+        comment="Custom GPT filter prompt for this user"
+    )
 
-    @validates('email')
-    def validate_email(self, key, email):
-        from app.core.validators import validate_email
-        return validate_email(email)
+    # Relationships
+    refresh_tokens: Mapped[list["Token"]] = relationship(
+        foreign_keys="[Token.authenticates_id]", 
+        back_populates="authenticates", 
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
+    api_keys: Mapped[list["APIKey"]] = relationship(
+        back_populates="user", 
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
 
-    @validates('gpt_filter_prompt')
-    def validate_gpt_filter_prompt(self, key, gpt_filter_prompt):
-        from app.core.validators import validate_gpt_filter_prompt
-        return validate_gpt_filter_prompt(gpt_filter_prompt)
+    def __repr__(self) -> str:
+        """String representation of the User model."""
+        return f"<User(id={self.id}, email={self.email}, role={self.role})>"

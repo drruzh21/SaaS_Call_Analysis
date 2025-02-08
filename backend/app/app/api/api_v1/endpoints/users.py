@@ -9,7 +9,13 @@ from app import crud, models, schemas
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.core.validators import validate_email, validate_full_name, validate_password, validate_user_exists
+from app.core.validators import (
+    validate_email, 
+    validate_full_name, 
+    validate_password, 
+    validate_password_update, 
+    validate_user_exists
+)
 from app.utilities import (
     send_new_account_email,
 )
@@ -21,20 +27,37 @@ router = APIRouter()
 async def create_user_profile(
     *,
     db: Annotated[AsyncSession, Depends(deps.get_db)],
-    password: str = Body(...),
-    email: EmailStr = Body(...),
-    full_name: str = Body(None),
+    password: str = Body(..., description="User's password"),
+    email: EmailStr = Body(..., description="User's email address"),
+    full_name: str = Body(None, description="User's full name"),
 ) -> Any:
     """
     Create new user without the need to be logged in.
+    
+    Args:
+        password: User's password
+        email: User's email address
+        full_name: Optional user's full name
+        
+    Returns:
+        Created user object
+        
+    Raises:
+        HTTPException: If email already exists or validation fails
     """
+    # Validate input data
     await validate_email(email)
     await validate_password(password)
     await validate_full_name(full_name)
     await validate_user_exists(db, email)
 
-    # Create user auth
-    user_in = schemas.UserCreate(password=password, email=email, full_name=full_name)
+    user_in = schemas.UserCreate(
+        password=password,
+        email=email,
+        full_name=full_name,
+        email_validated=False,
+        is_active=True
+    )
     user = await crud.user.create(db, obj_in=user_in)
     return user
 
@@ -47,44 +70,51 @@ async def update_user(
     current_user: Annotated[models.User, Depends(deps.get_current_active_user)],
 ) -> Any:
     """
-    Update user.
+    Update current user's profile.
+    
+    Args:
+        obj_in: User update data
+        current_user: Current authenticated user
+        
+    Returns:
+        Updated user object
+        
+    Raises:
+        HTTPException: If validation fails
     """
-    if obj_in.email:
+    # Validate password update if requested
+    if obj_in.password is not None:
+        await validate_password_update(
+            db, 
+            current_user, 
+            obj_in.original, 
+            obj_in.password
+        )
+
+    # Validate other fields if provided
+    if obj_in.email is not None:
         await validate_email(obj_in.email)
-    if obj_in.password:
-        await validate_password(obj_in.password)
-    if obj_in.full_name:
+        
+    if obj_in.full_name is not None:
         await validate_full_name(obj_in.full_name)
 
-    if current_user.hashed_password:
-        user = await crud.user.authenticate(db, email=current_user.email, password=obj_in.original)
-        if not obj_in.original or not user:
-            raise HTTPException(status_code=400, detail="Unable to authenticate this update.")
-    current_user_data = jsonable_encoder(current_user)
-    user_in = schemas.UserUpdate(**current_user_data)
-    if obj_in.password is not None:
-        user_in.password = obj_in.password
-    if obj_in.full_name is not None:
-        user_in.full_name = obj_in.full_name
-    if obj_in.email is not None:
-        check_user = await crud.user.get_by_email(db, email=obj_in.email)
-        if check_user and check_user.email != current_user.email:
-            raise HTTPException(
-                status_code=400,
-                detail="This username is not available.",
-            )
-        user_in.email = obj_in.email
-    user = await crud.user.update(db, db_obj=current_user, obj_in=user_in)
+    user = await crud.user.update(db, db_obj=current_user, obj_in=obj_in)
     return user
 
 
-@router.get("/", response_model=schemas.User)
+@router.get("/me", response_model=schemas.User)
 async def read_user(
     *,
     current_user: Annotated[models.User, Depends(deps.get_current_active_user)],
 ) -> Any:
     """
-    Get current user.
+    Get current user's profile.
+    
+    Args:
+        current_user: Current authenticated user
+        
+    Returns:
+        Current user object
     """
     return current_user
 
@@ -97,26 +127,37 @@ async def read_all_users(
     current_user: Annotated[models.User, Depends(deps.get_current_active_superuser)],
 ) -> Any:
     """
-    Retrieve all current users.
+    Retrieve all users (superuser only).
+    
+    Args:
+        page: Page number for pagination
+        current_user: Current authenticated superuser
+        
+    Returns:
+        List of user objects
     """
-    return await crud.user.get_multi(db=db, page=page)
+    users = await crud.user.get_multi(db, page=page)
+    return users
 
 
-@router.post("/new-totp", response_model=schemas.NewTOTP)
+@router.post("/totp/new", response_model=schemas.NewTOTP)
 async def request_new_totp(
     *,
     current_user: Annotated[models.User, Depends(deps.get_current_active_user)],
 ) -> Any:
     """
-    Request new keys to enable TOTP on the user account.
+    Request new TOTP keys for two-factor authentication.
+    
+    Args:
+        current_user: Current authenticated user
+        
+    Returns:
+        New TOTP configuration
     """
-    obj_in = security.create_new_totp(label=current_user.email)
-    # Remove the secret ...
-    obj_in.secret = None
-    return obj_in
+    return security.generate_totp()
 
 
-@router.post("/toggle-state", response_model=schemas.Msg)
+@router.put("/toggle", response_model=schemas.User)
 async def toggle_state(
     *,
     db: Annotated[AsyncSession, Depends(deps.get_db)],
@@ -124,15 +165,25 @@ async def toggle_state(
     current_user: Annotated[models.User, Depends(deps.get_current_active_superuser)],
 ) -> Any:
     """
-    Toggle user state (moderator function)
+    Toggle user state (superuser only).
+    
+    Args:
+        user_in: User update data with email and new state
+        current_user: Current authenticated superuser
+        
+    Returns:
+        Updated user object
+        
+    Raises:
+        HTTPException: If user not found
     """
-    response = await crud.user.toggle_user_state(db=db, obj_in=user_in)
-    if not response:
+    user = await crud.user.toggle_user_state(db=db, obj_in=user_in)
+    if not user:
         raise HTTPException(
-            status_code=400,
-            detail="Invalid request.",
+            status_code=404,
+            detail="The user with this email does not exist in the system",
         )
-    return {"msg": "User state toggled successfully."}
+    return user
 
 
 @router.post("/create", response_model=schemas.User)
@@ -143,18 +194,22 @@ async def create_user(
     current_user: Annotated[models.User, Depends(deps.get_current_active_superuser)],
 ) -> Any:
     """
-    Create new user (moderator function).
+    Create new user (superuser only).
+    
+    Args:
+        user_in: User creation data
+        current_user: Current authenticated superuser
+        
+    Returns:
+        Created user object
+        
+    Raises:
+        HTTPException: If user already exists
     """
-    user = await crud.user.get_by_email(db, email=user_in.email)
-    if user:
-        raise HTTPException(
-            status_code=400,
-            detail="The user with this username already exists in the system.",
-        )
+    await validate_user_exists(db, user_in.email)
     user = await crud.user.create(db, obj_in=user_in)
-    if settings.emails_enabled and user_in.email:
-        await send_new_account_email(email_to=user_in.email, username=user_in.email, password=user_in.password)
     return user
+
 
 @router.get("/data", response_model=schemas.Msg)
 async def data_endpoint() -> Any:

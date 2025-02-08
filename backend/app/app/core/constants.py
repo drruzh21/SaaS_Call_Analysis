@@ -26,6 +26,10 @@ MAX_PASSWORD_LENGTH: int = 64
 
 # Validation patterns
 EMAIL_REGEX: str = r"[^@]+@[^@]+\.[^@]+"
+FULL_NAME_REGEX: str = r"^[a-zA-Z\s\-']+$"
+PASSWORD_UPPERCASE_REGEX: str = r"[A-Z]"
+PASSWORD_LOWERCASE_REGEX: str = r"[a-z]"
+PASSWORD_DIGIT_REGEX: str = r"\d"
 SQL_PATTERNS: list[str] = [
     r'\b(select|insert|update|delete|drop|create|alter|truncate)\b',
     r'\b(union|join|where|having|group\s+by|order\s+by)\b',
@@ -37,6 +41,9 @@ SQL_PATTERNS: list[str] = [
     r'(\b1=1\b|\btrue=true\b|\bfalse=false\b)',
     r'(\'|\\"|\\\')|\b(cast|convert)\b'
 ]
+
+# Email validation
+MIN_EMAIL_LENGTH: int = 3
 
 # General settings
 GET_MULTI_MAX: int = 20
