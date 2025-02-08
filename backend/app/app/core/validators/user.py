@@ -8,17 +8,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models
 from app.core.constants import (
+    EMAIL_REGEX,
+    FULL_NAME_REGEX,
+    MAX_EMAIL_LENGTH,
     MAX_FULL_NAME_LENGTH,
-    MIN_PASSWORD_LENGTH,
+    MAX_GPT_FILTER_PROMPT_LENGTH,
     MAX_PASSWORD_LENGTH,
     MIN_EMAIL_LENGTH,
-    FULL_NAME_REGEX,
-    PASSWORD_UPPERCASE_REGEX,
-    PASSWORD_LOWERCASE_REGEX,
+    MIN_GPT_FILTER_PROMPT_LENGTH,
+    MIN_PASSWORD_LENGTH,
     PASSWORD_DIGIT_REGEX,
+    PASSWORD_LOWERCASE_REGEX,
+    PASSWORD_UPPERCASE_REGEX,
+    SQL_PATTERNS,
 )
 
-# Configure logging
 logger = logging.getLogger(__name__)
 
 
@@ -35,7 +39,7 @@ async def validate_user_exists(db: AsyncSession, email: str) -> None:
     """
     user = await crud.user.get_by_email(db, email=email)
     if user:
-        logger.warning(f"Attempted to create user with existing email: {email}")
+        logger.warning(f"Duplicate email attempt: {email}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with this email already exists"
@@ -58,7 +62,7 @@ async def validate_user_not_exists(db: AsyncSession, email: str) -> models.User:
     """
     user = await crud.user.get_by_email(db, email=email)
     if not user:
-        logger.warning(f"Attempted to access non-existent user: {email}")
+        logger.warning(f"Missing user attempt: {email}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
@@ -76,12 +80,22 @@ async def validate_email(email: EmailStr) -> None:
     Raises:
         HTTPException: If email is invalid
     """
-    # Basic email validation (pydantic's EmailStr already does format validation)
-    if not email or len(email) < MIN_EMAIL_LENGTH:
-        logger.warning(f"Invalid email length: {email}")
+    if len(email) < MIN_EMAIL_LENGTH:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Email must be at least {MIN_EMAIL_LENGTH} characters long"
+            detail=f"Email must be at least {MIN_EMAIL_LENGTH} characters"
+        )
+    
+    if len(email) > MAX_EMAIL_LENGTH:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Email must be less than {MAX_EMAIL_LENGTH} characters"
+        )
+
+    if not re.fullmatch(EMAIL_REGEX, email):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid email format"
         )
 
 
@@ -108,13 +122,13 @@ async def validate_password(
     if len(password) < MIN_PASSWORD_LENGTH:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Password must be at least {MIN_PASSWORD_LENGTH} characters long"
+            detail=f"Password must be at least {MIN_PASSWORD_LENGTH} characters"
         )
         
     if len(password) > MAX_PASSWORD_LENGTH:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Password must be at most {MAX_PASSWORD_LENGTH} characters long"
+            detail=f"Password must be at most {MAX_PASSWORD_LENGTH} characters"
         )
     
     if check_strength:
@@ -136,7 +150,7 @@ async def validate_password(
         if not re.search(PASSWORD_DIGIT_REGEX, password):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Password must contain at least one number"
+                detail="Password must contain at least one digit"
             )
 
 
@@ -150,19 +164,16 @@ async def validate_full_name(full_name: Optional[str]) -> None:
     Raises:
         HTTPException: If full name is invalid
     """
-    if full_name is None:
-        return
-        
-    if len(full_name) > MAX_FULL_NAME_LENGTH:
+    if full_name and len(full_name) > MAX_FULL_NAME_LENGTH:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Full name must be at most {MAX_FULL_NAME_LENGTH} characters long"
+            detail=f"Full name exceeds {MAX_FULL_NAME_LENGTH} characters"
         )
         
-    if not re.match(FULL_NAME_REGEX, full_name):
+    if full_name and not re.fullmatch(FULL_NAME_REGEX, full_name):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Full name can only contain letters, spaces, hyphens, and apostrophes"
+            detail="Invalid characters in full name"
         )
 
 
@@ -200,3 +211,30 @@ async def validate_password_update(
         )
         
     await validate_password(new_password)
+    
+    
+async def validate_gpt_filter_prompt(prompt: str) -> str:
+    """
+    Comprehensive validation of GPT prompt.
+    """
+    if len(prompt) < MIN_GPT_FILTER_PROMPT_LENGTH:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Prompt too short (min {MIN_GPT_FILTER_PROMPT_LENGTH} chars)"
+        )
+    
+    if len(prompt) > MAX_GPT_FILTER_PROMPT_LENGTH:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Prompt too long (max {MAX_GPT_FILTER_PROMPT_LENGTH} chars)"
+        )
+    
+    sanitized = prompt.replace('\x00', '').strip()
+    if any(re.search(pattern, sanitized, re.IGNORECASE) for pattern in SQL_PATTERNS):
+        logger.warning("Potential SQL injection detected in prompt")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid prompt content"
+        )
+    
+    return sanitized

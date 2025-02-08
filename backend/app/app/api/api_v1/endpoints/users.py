@@ -1,23 +1,18 @@
 from typing import Annotated, Any, List
 
 from fastapi import APIRouter, Body, Depends, HTTPException
-from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.core.validators import (
-    validate_email, 
-    validate_full_name, 
-    validate_password, 
-    validate_password_update, 
-    validate_user_exists
-)
-from app.utilities import (
-    send_new_account_email,
+    validate_email,
+    validate_full_name,
+    validate_password,
+    validate_password_update,
+    validate_user_exists,
 )
 
 router = APIRouter()

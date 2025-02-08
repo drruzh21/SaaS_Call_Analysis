@@ -1,17 +1,12 @@
 import logging
 from typing import Any, List
-from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas
 from app.api import deps
-from app.core.validators import (
-    validate_api_key_exists,
-    validate_api_key_is_active,
-    validate_api_key_ownership
-)
+from app.core.validators import validate_api_key_exists_by_name, validate_api_key_ownership
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -58,7 +53,7 @@ async def update_api_key(
     logger.info(f"User {current_user.email} attempting to update API key named: {name}")
     
     # Validate the API key exists and is owned by the current user
-    api_key = await validate_api_key_exists(db, name, current_user.id)
+    api_key = await validate_api_key_exists_by_name(db, name, current_user.id)
     await validate_api_key_ownership(api_key, current_user.id)
     
     # Update the API key
@@ -103,7 +98,7 @@ async def read_api_key(
     Only accessible by the key owner.
     """
     # Validate the API key exists and is owned by the current user
-    api_key = await validate_api_key_exists(db, name, current_user.id)
+    api_key = await validate_api_key_exists_by_name(db, name, current_user.id)
     await validate_api_key_ownership(api_key, current_user.id)
     
     return api_key
@@ -124,7 +119,7 @@ async def delete_api_key(
     logger.info(f"User {current_user.email} attempting to delete API key named: {name}")
     
     # Validate the API key exists and is owned by the current user
-    api_key = await validate_api_key_exists(db, name, current_user.id)
+    api_key = await validate_api_key_exists_by_name(db, name, current_user.id)
     await validate_api_key_ownership(api_key, current_user.id)
     
     # Delete the API key

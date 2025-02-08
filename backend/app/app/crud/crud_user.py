@@ -1,13 +1,17 @@
+import logging
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.core.constants import MAX_GPT_FILTER_PROMPT_LENGTH, MIN_GPT_FILTER_PROMPT_LENGTH
 from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models.user import User
 from app.schemas.totp import NewTOTP
 from app.schemas.user import UserCreate, UserInDB, UserUpdate
+
+logger = logging.getLogger(__name__)
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -193,6 +197,42 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         if not db_obj:
             return None
         return await self.update(db=db, db_obj=db_obj, obj_in=obj_in)
+
+    async def update_gpt_filter_prompt(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: Any,
+        gpt_filter_prompt: str
+    ) -> Optional[User]:
+        """
+        Updates user's GPT filter prompt with length validation.
+        
+        Args:
+            db: Async database session
+            user_id: User's UUID
+            gpt_filter_prompt: New prompt text
+            
+        Returns:
+            Updated User object or None if not found
+        """
+        if len(gpt_filter_prompt) < MIN_GPT_FILTER_PROMPT_LENGTH:
+            raise ValueError(f"Prompt too short (min {MIN_GPT_FILTER_PROMPT_LENGTH} chars)")
+        if len(gpt_filter_prompt) > MAX_GPT_FILTER_PROMPT_LENGTH:
+            raise ValueError(f"Prompt too long (max {MAX_GPT_FILTER_PROMPT_LENGTH} chars)")
+        
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalars().first()
+        
+        if not user:
+            logger.error(f"User {user_id} not found for prompt update")
+            return None
+            
+        user.gpt_filter_prompt = gpt_filter_prompt
+        await db.commit()
+        await db.refresh(user)
+        logger.info(f"Updated GPT filter prompt for user {user_id}")
+        return user
 
     @staticmethod
     async def has_password(user: User) -> bool:
