@@ -111,14 +111,14 @@ export const apiAuth = {
     )
   },
   async getProfile(token: string) {
-    return await useFetch<IUserProfile>(`${apiCore.url()}/users/`,
+    return await useFetch<IUserProfile>(`${apiCore.url()}/users/me`,
       {
         headers: apiCore.headers(token)
       }
     )
   },
   async updateProfile(token: string, data: IUserProfileUpdate) {
-    return await useFetch<IUserProfile>(`${apiCore.url()}/users/`, 
+    return await useFetch<IUserProfile>(`${apiCore.url()}/users/me`, 
       {
         method: "PUT",
         body: data,

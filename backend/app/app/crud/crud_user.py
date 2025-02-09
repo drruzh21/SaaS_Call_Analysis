@@ -38,10 +38,26 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         Returns:
             Created user object
         """
-        create_data = obj_in.model_dump(exclude_unset=True)
+        # Используем exclude_none=True вместо exclude_unset=True,
+        # чтобы включить все поля со значениями по умолчанию
+        create_data = obj_in.model_dump(exclude_none=True)
+        
+        # Обрабатываем пароль
         if create_data.get("password"):
             create_data["hashed_password"] = get_password_hash(create_data["password"])
             del create_data["password"]
+        
+        # Устанавливаем значения по умолчанию для обязательных полей
+        if "role" not in create_data:
+            create_data["role"] = "user"
+        if "balance_rub" not in create_data:
+            create_data["balance_rub"] = 0
+        if "email_validated" not in create_data:
+            create_data["email_validated"] = False
+        if "is_active" not in create_data:
+            create_data["is_active"] = True
+        if "is_superuser" not in create_data:
+            create_data["is_superuser"] = False
             
         db_obj = User(**create_data)
         db.add(db_obj)

@@ -31,14 +31,14 @@ class DBTask(Task):
     async def db(self) -> AsyncSession:
         """Get database session."""
         if self._db is None:
-            logger.debug("Creating new database session")
+            logger.warning("Creating new database session")
             self._db = async_session()
         return self._db
     
     async def after_return(self, *args, **kwargs):
         """Clean up after task execution."""
         if self._db is not None:
-            logger.debug("Closing database session")
+            logger.warning("Closing database session")
             await self._db.close()
             self._db = None
 
@@ -57,18 +57,18 @@ def analyze_call(self, request_dict: Dict[str, Any]) -> dict:
     Returns:
         Dictionary with analysis results
     """
-    logger.info(f"Starting call analysis task {self.request.id}")
+    logger.warning(f"Starting call analysis task {self.request.id}")
     
     async def _analyze():
         try:
             # Convert dict to CallAnalysisRequest
-            logger.debug("Converting request dictionary to CallAnalysisRequest")
+            logger.warning("Converting request dictionary to CallAnalysisRequest")
             request = CallAnalysisRequest(**request_dict)
-            logger.debug(f"Request details: manager={request.manager_name}, duration={request.call_duration}s")
-            logger.debug(f"Call text length: {len(request.text)} characters")
+            logger.warning(f"Request details: manager={request.manager_name}, duration={request.call_duration}s")
+            logger.warning(f"Call text length: {len(request.text)} characters")
             
             # Create orchestrator with required analyzers
-            logger.info("Initializing V1Orchestrator with analyzers")
+            logger.warning("Initializing V1Orchestrator with analyzers")
             orchestrator = V1Orchestrator(
                 metrics_analyzer=CallMetricsAnalyzer(),
                 overall_analyzer=CallOverallAnalyzer(),
@@ -76,33 +76,34 @@ def analyze_call(self, request_dict: Dict[str, Any]) -> dict:
             )
             
             # Create initial analysis result
-            logger.debug("Creating initial analysis result object")
+            logger.warning("Creating initial analysis result object")
             analysis_result = CallAnalysisResult(
                 call_text=request.text,
                 call_duration=request.call_duration,
                 manager_fio=request.manager_name,
-                date=datetime.fromisoformat(request.datetime)
+                # request.datetime is already a datetime object thanks to Pydantic
+                date=request.datetime
             )
             
             # Enrich analysis result with AI analysis
-            logger.info("Starting call analysis with V1Orchestrator")
+            logger.warning("Starting call analysis with V1Orchestrator")
             analysis_result = orchestrator.analyze_call(analysis_result)
-            logger.debug(f"Analysis completed with final grade: {analysis_result.final_grade:.2f}")
+            logger.warning(f"Analysis completed with final grade: {analysis_result.final_grade:.2f}")
             
             # Set example values for missing fields
-            logger.debug("Setting default values for missing fields")
+            logger.warning("Setting default values for missing fields")
             analysis_result.lead_url = f"https://crm.company.com/leads/{datetime.now().strftime('%Y%m%d%H%M%S')}"
             if not analysis_result.analysis_reason:
                 analysis_result.analysis_reason = "Call analysis performed as part of regular quality assessment"
                 
             # Save to database with proper transaction handling
-            logger.info("Saving analysis results to database")
+            logger.warning("Saving analysis results to database")
             db = await self.db
             
             try:
                 # Start transaction
                 async with db.begin():
-                    logger.debug("Starting database transaction")
+                    logger.warning("Starting database transaction")
                     existing_objections = {
                         obj.name: obj 
                         for obj in (await db.execute(
@@ -111,21 +112,21 @@ def analyze_call(self, request_dict: Dict[str, Any]) -> dict:
                             )
                         )).scalars().all()
                     }
-                    logger.debug(f"Found {len(existing_objections)} existing objections")
+                    logger.warning(f"Found {len(existing_objections)} existing objections")
                     
                     # Reuse existing objections or create new ones
                     for i, objection in enumerate(analysis_result.objections):
                         if objection.name in existing_objections:
-                            logger.debug(f"Reusing existing objection: {objection.name}")
+                            logger.warning(f"Reusing existing objection: {objection.name}")
                             analysis_result.objections[i] = existing_objections[objection.name]
                         else:
-                            logger.debug(f"Creating new objection: {objection.name}")
+                            logger.warning(f"Creating new objection: {objection.name}")
                     
                     # Add and commit
-                    logger.debug("Adding analysis result to database")
+                    logger.warning("Adding analysis result to database")
                     db.add(analysis_result)
                     await db.commit()
-                    logger.info(f"Successfully saved analysis result with ID: {analysis_result.id}")
+                    logger.warning(f"Successfully saved analysis result with ID: {analysis_result.id}")
                 
             except SQLAlchemyError as e:
                 await db.rollback()
@@ -134,7 +135,7 @@ def analyze_call(self, request_dict: Dict[str, Any]) -> dict:
                 raise
                 
             # Return result as dictionary
-            logger.info("Call analysis task completed successfully")
+            logger.warning("Call analysis task completed successfully")
             return {
                 "id": analysis_result.id,
                 "final_grade": analysis_result.final_grade,

@@ -43,7 +43,7 @@ class OpenAILLMService():
             model=settings.GPT_MODEL,
             messages=messages,
             response_format=self.response_format,
-            temperature=0.2
+            temperature=0
         )
 
         # См. официальную документацию: результат модели (структурированный)

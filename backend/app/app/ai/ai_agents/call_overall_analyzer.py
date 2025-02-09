@@ -7,6 +7,7 @@ from app.ai.ai_agents.i_gpt_analyzer import IGptAnalyzer
 from app.ai.openai_llm_service import OpenAILLMService
 from app.ai.prompts.overall_analyzer_prompt import OVERALL_ANALYZER_PROMPT
 from app.ai.structured_output_models.call_overall_model import CallOverallAnalysis
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,11 @@ logger = logging.getLogger(__name__)
 class CallOverallAnalyzer(IGptAnalyzer[CallOverallAnalysis]):
     """GPT agent for providing overall call analysis and recommendations"""
     
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str | None = None):
+        # Get API key from settings if not provided
+        if api_key is None:
+            from app.core.config import settings
+            api_key = settings.OPENAI_API_KEY
         """
         Initialize analyzer
         

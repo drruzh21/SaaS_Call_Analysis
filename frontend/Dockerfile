@@ -1,4 +1,4 @@
-FROM node:18.20.5 AS build
+FROM node:18.20.6 AS build
 ENV NODE_ENV=development APP_ENV=development NITRO_HOST=${NUXT_HOST:-0.0.0.0} NITRO_PORT=${NUXT_PORT:-3000} NUXT_TELEMETRY_DISABLED=1
 # ENV PATH /frontend/node_modules/.bin:$PATH
 COPY . /frontend
@@ -16,7 +16,7 @@ ENV NODE_ENV=production APP_ENV=production
 ENTRYPOINT ["yarn"]
 CMD ["start"]
 
-FROM node:18.20.5-alpine AS run-minimal
+FROM node:18.20.6-alpine AS run-minimal
 ARG NUXT_VERSION=^3.5.0
 ARG NUXT_CONTENT_VERSION=^2.4.3
 ARG TAILWINDCSS_VERSION=^3.2.1

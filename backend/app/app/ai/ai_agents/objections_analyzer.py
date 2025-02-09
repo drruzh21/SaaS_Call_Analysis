@@ -7,6 +7,7 @@ from app.ai.ai_agents.i_gpt_analyzer import IGptAnalyzer
 from app.ai.openai_llm_service import OpenAILLMService
 from app.ai.prompts.objections_analyzer_prompt import OBJECTIONS_ANALYZER_PROMPT
 from app.ai.structured_output_models.objections_analysis_model import ObjectionsAnalysis
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,11 @@ class ObjectionsAnalyzer(IGptAnalyzer[ObjectionsAnalysis]):
     and provides detailed analysis of how they were handled.
     """
     
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str | None = None):
+        # Get API key from settings if not provided
+        if api_key is None:
+            from app.core.config import settings
+            api_key = settings.OPENAI_API_KEY
         """Initialize the analyzer with OpenAI API key.
         
         Args:

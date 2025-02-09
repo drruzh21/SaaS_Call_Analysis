@@ -173,3 +173,113 @@ class V1Orchestrator:
         except Exception as e:
             logger.error(f"Error during call analysis: {str(e)}", exc_info=True)
             raise
+
+
+if __name__ == "__main__":
+    # Set up logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    # Sample call text for testing
+    sample_call = """
+    Менеджер: Добрый день! Меня зовут Иван, компания ABC. Как я могу к вам обращаться?
+    Клиент: Здравствуйте, я Анна.
+    Менеджер: Анна, я звоню по поводу нашего программного обеспечения для анализа продаж. Скажите, используете ли вы сейчас какие-то инструменты для аналитики?
+    Клиент: Да, у нас есть Excel таблицы, но это не очень удобно.
+    Менеджер: Понимаю. Какие основные сложности испытываете при работе с текущим решением?
+    Клиент: Много времени уходит на ручной ввод и обработку данных.
+    Менеджер: Наше решение автоматизирует эти процессы. Могу я рассказать подробнее?
+    Клиент: Да, но сколько это стоит?
+    Менеджер: Базовая версия начинается от 50000 рублей. Давайте я сначала покажу функционал, и вы сами оцените ценность для вашего бизнеса?
+    Клиент: Хорошо, давайте.
+    """
+    
+    # Create mock analyzers
+    class MockAnalyzer:
+        def analyze(self, text):
+            # Return mock analysis results based on analyzer type
+            if isinstance(self, CallMetricsAnalyzer):
+                from app.ai.structured_output_models.call_metrics_model import CallAnalysisMetrics
+                return CallAnalysisMetrics(
+                    is_manager_established_contact=0.8,
+                    is_manager_established_contact_comment="Менеджер представился и узнал имя клиента",
+                    is_manager_holding_initiative=0.7,
+                    is_manager_holding_initiative_comment="Менеджер ведет диалог, задает вопросы",
+                    is_manager_using_dialog_programming=0.6,
+                    is_manager_using_dialog_programming_comment="Есть элементы программирования диалога",
+                    is_manager_qualifying_client=0.8,
+                    is_manager_qualifying_client_comment="Выявил текущее решение и проблемы",
+                    is_manager_identifying_pain=0.7,
+                    is_manager_identifying_pain_comment="Определил проблему с ручным вводом",
+                    is_manager_presenting_product=0.6,
+                    is_manager_presenting_product_comment="Начал презентацию продукта",
+                    is_manager_showing_expertise=0.7,
+                    is_manager_showing_expertise_comment="Демонстрирует знание продукта",
+                    is_manager_handling_objections=0.8,
+                    is_manager_handling_objections_comment="Хорошо отработал возражение по цене",
+                    is_manager_setting_next_step=0.6,
+                    is_manager_setting_next_step_comment="Договорился о демонстрации",
+                    is_manager_using_client_framing=0.7,
+                    is_manager_using_client_framing_comment="Использует информацию о клиенте",
+                    tone_of_voice=0.8,
+                    tone_of_voice_comment="Профессиональный и дружелюбный тон"
+                )
+            elif isinstance(self, CallOverallAnalyzer):
+                from app.ai.structured_output_models.call_overall_model import CallOverallAnalysis
+                return CallOverallAnalysis(
+                    recommendations_how_to_work_with_client=["Больше акцентировать внимание на выгодах", "Усилить работу с возражениями"],
+                    overall_analysis="Звонок проведен на хорошем уровне, есть потенциал для улучшения"
+                )
+            else:  # ObjectionsAnalyzer
+                from app.ai.structured_output_models.objections_model import ObjectionsAnalysis, ObjectionType
+                return ObjectionsAnalysis(
+                    objections=[ObjectionType.PRICE],
+                    analysis="Клиент проявил интерес к продукту, но обеспокоен ценой"
+                )
+    
+    # Create mock analyzers inheriting from base classes
+    class MockMetricsAnalyzer(CallMetricsAnalyzer, MockAnalyzer): pass
+    class MockOverallAnalyzer(CallOverallAnalyzer, MockAnalyzer): pass
+    class MockObjectionsAnalyzer(ObjectionsAnalyzer, MockAnalyzer): pass
+    
+    # Initialize orchestrator with mock analyzers
+    orchestrator = V1Orchestrator(
+        metrics_analyzer=MockMetricsAnalyzer(),
+        overall_analyzer=MockOverallAnalyzer(),
+        objections_analyzer=MockObjectionsAnalyzer()
+    )
+    
+    # Create a sample CallAnalysisResult
+    analysis_result = CallAnalysisResult(
+        call_text=sample_call,
+        manager_fio="Иван Петров",
+        call_duration=180  # 3 minutes
+    )
+    
+    # Run analysis
+    try:
+        result = orchestrator.analyze_call(analysis_result)
+        
+        # Print results
+        print("\n=== Call Analysis Results ===")
+        print(f"Final Grade: {result.final_grade:.2f}")
+        print("\nMetrics Analysis:")
+        print(f"Contact Established: {result.is_manager_established_contact:.2f} - {result.is_manager_established_contact_comment}")
+        print(f"Initiative: {result.is_manager_holding_initiative:.2f} - {result.is_manager_holding_initiative_comment}")
+        
+        print("\nOverall Analysis:")
+        print(result.overall_analysis)
+        print("\nRecommendations:")
+        for rec in result.recommendations_how_to_work_with_client:
+            print(f"- {rec}")
+        
+        print("\nObjections:")
+        for obj in result.objections:
+            print(f"- {obj.name}")
+        print(f"\nObjections Analysis: {result.analysis_reason}")
+        
+    except Exception as e:
+        print(f"Error during analysis: {str(e)}")
+
