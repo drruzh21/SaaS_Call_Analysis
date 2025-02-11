@@ -6,10 +6,11 @@ from uuid import uuid4
 
 from sqlalchemy import CheckConstraint, DateTime, Integer, Sequence, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.core.constants import (
+    DEFAULT_CALL_ANALYSIS_PROMPT,
     MAX_EMAIL_LENGTH,
     MAX_FULL_NAME_LENGTH,
     MAX_GPT_FILTER_PROMPT_LENGTH,
@@ -137,8 +138,10 @@ class User(Base):
         nullable=True,
         comment="Unique identifier for the user's company"
     )
+
     gpt_filter_prompt: Mapped[Optional[str]] = mapped_column(
         nullable=True,
+        default=DEFAULT_CALL_ANALYSIS_PROMPT,
         comment="Custom GPT filter prompt for this user"
     )
 

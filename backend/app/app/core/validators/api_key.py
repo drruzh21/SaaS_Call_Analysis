@@ -1,8 +1,4 @@
-"""Validation functions for API keys."""
-
 import logging
-from datetime import datetime, timezone
-from typing import Optional
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -49,29 +45,31 @@ async def validate_api_key_exists_by_name(
     return api_key
 
 
-async def validate_api_key_is_active(api_key: models.APIKey) -> None:
-    """
-    Validate that an API key is active and not expired.
-    
-    Args:
-        api_key: API key to validate
-        
-    Raises:
-        HTTPException: If the API key is inactive or expired
-    """
-    if not api_key.is_active:
-        logger.warning(f"Attempt to use inactive API key: {api_key.id}")
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="API key is inactive"
-        )
+# Пока что оставил, но так как поле expires_at сейчас почти не используется, то в валидаторе нет необходимости
 
-    if api_key.expires_at and api_key.expires_at <= datetime.now(timezone.utc):
-        logger.warning(f"Attempt to use expired API key: {api_key.id}")
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="API key has expired"
-        )
+# async def validate_api_key_is_active(api_key: models.APIKey) -> None:
+#     """
+#     Validate that an API key is active and not expired.
+#     
+#     Args:
+#         api_key: API key to validate
+#         
+#     Raises:
+#         HTTPException: If the API key is inactive or expired
+#     """
+#     if not api_key.is_active:
+#         logger.warning(f"Attempt to use inactive API key: {api_key.id}")
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="API key is inactive"
+#         )
+# 
+#     if api_key.expires_at and api_key.expires_at <= datetime.now(timezone.utc):
+#         logger.warning(f"Attempt to use expired API key: {api_key.id}")
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="API key has expired"
+#         )
 
 
 async def validate_api_key_ownership(api_key: models.APIKey, user_id: UUID) -> None:
