@@ -69,15 +69,26 @@ def analyze_call(self, request_dict: Dict[str, Any]) -> dict:
             
             # Create orchestrator with required analyzers
             logger.warning("Initializing V1Orchestrator with analyzers")
+            from app.core.config import settings
+
+            # Create real analyzers
+            metrics_analyzer = CallMetricsAnalyzer(api_key=settings.OPENAI_API_KEY)
+            overall_analyzer = CallOverallAnalyzer(api_key=settings.OPENAI_API_KEY)
+            objections_analyzer = ObjectionsAnalyzer(api_key=settings.OPENAI_API_KEY)
+
+            # Initialize orchestrator with real analyzers
             orchestrator = V1Orchestrator(
-                metrics_analyzer=CallMetricsAnalyzer(),
-                overall_analyzer=CallOverallAnalyzer(),
-                objections_analyzer=ObjectionsAnalyzer()
+                metrics_analyzer=metrics_analyzer,
+                overall_analyzer=overall_analyzer,
+                objections_analyzer=objections_analyzer
             )
-            
-            # Create initial analysis result
+
+            # Create a sample CallAnalysisResult with all required fields initialized
             logger.warning("Creating initial analysis result object")
             analysis_result = CallAnalysisResult(
+                id=1,
+                company_name_id=1,
+                lead_url="https://crm.example.com/lead/123",
                 call_text=request.text,
                 call_duration=request.call_duration,
                 manager_fio=request.manager_name,

@@ -7,7 +7,6 @@ from app.ai.ai_agents.i_gpt_analyzer import IGptAnalyzer
 from app.ai.openai_llm_service import OpenAILLMService
 from app.ai.prompts.objections_analyzer_prompt import OBJECTIONS_ANALYZER_PROMPT
 from app.ai.structured_output_models.objections_analysis_model import ObjectionsAnalysis
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class ObjectionsAnalyzer(IGptAnalyzer[ObjectionsAnalysis]):
             system_prompt=OBJECTIONS_ANALYZER_PROMPT
         )
     
-    async def analyze(self, call_text: str) -> ObjectionsAnalysis:
+    def analyze(self, call_text: str) -> ObjectionsAnalysis:
         """Analyze the call text to identify and classify objections.
         
         Args:
@@ -50,13 +49,12 @@ class ObjectionsAnalyzer(IGptAnalyzer[ObjectionsAnalysis]):
         try:
             # Get analysis from GPT
             logger.debug("Sending request to GPT")
-            response = await self._llm_service.get_structured_response(call_text)
+            response = self._llm_service.get_completion(call_text)
             
             # Validate response
             self._validate_response(response)
             
             logger.info("Objections analysis completed successfully")
-            logger.debug(f"Found {len(response.objections)} objections")
             return response
             
         except Exception as e:

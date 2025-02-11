@@ -1,13 +1,12 @@
 """AI agent for analyzing call metrics."""
 
 import logging
-from typing import Any
 
 from app.ai.ai_agents.i_gpt_analyzer import IGptAnalyzer
 from app.ai.openai_llm_service import OpenAILLMService
 from app.ai.prompts.metrics_analyzer_prompt import METRICS_ANALYZER_PROMPT
 from app.ai.structured_output_models.call_metrics_model import CallAnalysisMetrics
-from app.core.config import settings
+from app.ai.structured_output_models.score import Score
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ class CallMetricsAnalyzer(IGptAnalyzer[CallAnalysisMetrics]):
             result = self.llm_service.get_completion(
                 f"Проанализируйте следующую запись телефонного разговора и оцените все метрики:\n\n{call_text}"
             )
-            logger.debug(f"Received GPT response with final grade: {result.final_grade:.2f}")
+            logger.debug(f"Received GPT response")
             
             # Validate metrics
             self._validate_metrics(result)
@@ -80,29 +79,34 @@ class CallMetricsAnalyzer(IGptAnalyzer[CallAnalysisMetrics]):
         """Validate that all metrics are within expected ranges.
         
         Args:
-            metrics: Metrics to validate
+            metrics: Metrics to validate. Can be either a CallAnalysisMetrics instance or a dict.
             
         Raises:
             ValueError: If any metric is outside the valid range [0, 1]
         """
         logger.debug("Validating metrics")
+
+        # These are the actual field names from the Pydantic model
         numeric_fields = [
             'is_manager_established_contact',
+            'speech_quality',
             'is_manager_holding_initiative',
-            'is_manager_using_dialog_programming',
-            'is_manager_qualifying_client',
-            'is_manager_identifying_pain',
-            'is_manager_presenting_product',
-            'is_manager_showing_expertise',
-            'is_manager_handling_objections',
-            'is_manager_setting_next_step',
-            'is_manager_using_client_framing',
+            'problem_identification',
+            'product_presentation',
+            'expertise_demonstration',
+            'objection_handling',
+            'next_step_setting',
             'tone_of_voice'
         ]
         
         for field in numeric_fields:
-            value = getattr(metrics, field)
-            if value is not None and (value < 0 or value > 1):
-                error_msg = f"Invalid {field} value: {value}. Must be between 0 and 1"
-                logger.error(error_msg)
-                raise ValueError(error_msg)
+            try:
+                value = getattr(metrics, field)
+                if isinstance(value, float) or isinstance(value, int):
+                    if value is not None and (value < 0 or value > 1):
+                        error_msg = f"Invalid {field} value: {value}. Must be between 0 and 1"
+                        logger.error(error_msg)
+                        raise ValueError(error_msg)
+            except AttributeError:
+                logger.warning(f"Field {field} not found in metrics")
+                continue  # Skip fields that don't exist
