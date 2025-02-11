@@ -14,7 +14,11 @@ logger = logging.getLogger(__name__)
 class CallOverallAnalyzer(IGptAnalyzer[CallOverallAnalysis]):
     """GPT agent for providing overall call analysis and recommendations"""
     
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str | None = None):
+        # Get API key from settings if not provided
+        if api_key is None:
+            from app.core.config import settings
+            api_key = settings.OPENAI_API_KEY
         """
         Initialize analyzer
         
@@ -51,14 +55,13 @@ class CallOverallAnalyzer(IGptAnalyzer[CallOverallAnalysis]):
             self._validate_response(result)
             
             logger.info("Overall call analysis completed successfully")
-            logger.debug(f"Generated {len(result.recommendations_how_to_work_with_client)} recommendations")
             return CallOverallAnalysis.parse_obj(result)
             
         except Exception as e:
             logger.error(f"Error during overall analysis: {str(e)}", exc_info=True)
             raise
             
-    def _validate_response(self, response: dict[str, Any]):
+    def _validate_response(self, response: CallOverallAnalysis):
         """Validate that the response contains required fields.
         
         Args:
@@ -69,12 +72,12 @@ class CallOverallAnalyzer(IGptAnalyzer[CallOverallAnalysis]):
         """
         logger.debug("Validating overall analysis response")
         
-        if not response.get("overall_analysis"):
+        if not response.overall_analysis:
             error_msg = "Overall analysis cannot be empty"
             logger.error(error_msg)
             raise ValueError(error_msg)
             
-        if not response.get("recommendations_how_to_work_with_client"):
+        if not response.recommendations_how_to_work_with_client:
             error_msg = "Recommendations cannot be empty"
             logger.error(error_msg)
             raise ValueError(error_msg)

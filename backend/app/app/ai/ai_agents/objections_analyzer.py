@@ -18,7 +18,11 @@ class ObjectionsAnalyzer(IGptAnalyzer[ObjectionsAnalysis]):
     and provides detailed analysis of how they were handled.
     """
     
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str | None = None):
+        # Get API key from settings if not provided
+        if api_key is None:
+            from app.core.config import settings
+            api_key = settings.OPENAI_API_KEY
         """Initialize the analyzer with OpenAI API key.
         
         Args:
@@ -30,7 +34,7 @@ class ObjectionsAnalyzer(IGptAnalyzer[ObjectionsAnalysis]):
             system_prompt=OBJECTIONS_ANALYZER_PROMPT
         )
     
-    async def analyze(self, call_text: str) -> ObjectionsAnalysis:
+    def analyze(self, call_text: str) -> ObjectionsAnalysis:
         """Analyze the call text to identify and classify objections.
         
         Args:
@@ -45,13 +49,12 @@ class ObjectionsAnalyzer(IGptAnalyzer[ObjectionsAnalysis]):
         try:
             # Get analysis from GPT
             logger.debug("Sending request to GPT")
-            response = await self._llm_service.get_structured_response(call_text)
+            response = self._llm_service.get_completion(call_text)
             
             # Validate response
             self._validate_response(response)
             
             logger.info("Objections analysis completed successfully")
-            logger.debug(f"Found {len(response.objections)} objections")
             return response
             
         except Exception as e:

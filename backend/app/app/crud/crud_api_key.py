@@ -30,23 +30,28 @@ class CRUDAPIKey(CRUDBase[APIKey, APIKeyCreate, APIKeyUpdate]):
         self, 
         db: AsyncSession, 
         *, 
-        user_id: UUID,
-        obj_in: APIKeyCreate
+        obj_in: APIKeyCreate,
+        user_id: UUID
     ) -> APIKey:
-        """
-        Create a new API key for a user.
-        Only the name can be set during creation.
+        """Create a new API key for a user.
+        
+        Args:
+            db: Database session
+            obj_in: API key creation data including name
+            user_id: ID of the user creating the key
+            
+        Returns:
+            Created API key object
         """
         key = await self._generate_unique_key(db)
         
+        # Create the API key object with validated data
         db_obj = APIKey(
-            id=None,
             key=key,
             user_id=user_id,
             name=obj_in.name,
-            is_active=True,
-            expires_at=None,
-            created_at=datetime.now(timezone.utc)
+            expires_at=obj_in.expires_at,  # Already validated by Pydantic
+            is_active=obj_in.is_active
         )
         
         db.add(db_obj)
@@ -54,104 +59,87 @@ class CRUDAPIKey(CRUDBase[APIKey, APIKeyCreate, APIKeyUpdate]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def update(
-        self,
-        db: AsyncSession,
-        *,
-        db_obj: APIKey,
-        obj_in: Union[APIKeyUpdate, dict[str, Any]]
-    ) -> APIKey:
-        """
-        Update an API key.
-        Only name and is_active can be modified.
-        """
-        update_data = obj_in if isinstance(obj_in, dict) else obj_in.model_dump(exclude_unset=True)
-        
-        allowed_fields = {"name", "is_active"}
-        filtered_data = {
-            k: v for k, v in update_data.items() 
-            if k in allowed_fields and v is not None
-        }
-        
-        return await super().update(db, db_obj=db_obj, obj_in=filtered_data)
-
-    async def get_by_name(
-        self,
-        db: AsyncSession,
-        *,
-        name: str,
-        user_id: UUID,
+    async def get_by_key(
+        self, 
+        db: AsyncSession, 
+        *, 
+        key: str,
         check_active: bool = True
     ) -> Optional[APIKey]:
-        """Get an API key by its name and user_id."""
-        conditions = [
-            APIKey.name == name,
-            APIKey.user_id == user_id
-        ]
+        """Get API key by its value, optionally checking if it's active."""
+        query = select(APIKey).where(APIKey.key == key)
         
         if check_active:
-            conditions.extend([
-                APIKey.is_active == True,
-                or_(
-                    APIKey.expires_at.is_(None),
-                    APIKey.expires_at > datetime.now(timezone.utc)
+            now = datetime.now(timezone.utc)
+            query = query.where(
+                and_(
+                    APIKey.is_active == True,
+                    or_(
+                        APIKey.expires_at.is_(None),
+                        APIKey.expires_at > now
+                    )
                 )
-            ])
+            )
             
-        result = await db.execute(
-            select(APIKey).where(and_(*conditions))
-        )
-        return result.scalar_one_or_none()
-
-    async def get_by_id(
-        self,
-        db: AsyncSession,
-        *,
-        id: UUID,
-    ) -> Optional[APIKey]:
-        """Get an API key by its id."""
-        result = await db.execute(
-            select(APIKey).where(APIKey.id == id)
-        )
-        return result.scalar_one_or_none()
+        result = await db.execute(query)
+        return result.scalars().first()
 
     async def get_multi_by_user(
-        self,
-        db: AsyncSession,
-        *,
-        user_id: UUID,
-        skip: int = 0,
-        limit: int = GET_MULTI_MAX
+        self, 
+        db: AsyncSession, 
+        *, 
+        user_id: UUID, 
+        page: int = 0,
+        limit: int = GET_MULTI_MAX,
+        include_expired: bool = False
     ) -> list[APIKey]:
-        """Get all API keys for a specific user."""
-        result = await db.execute(
-            select(APIKey)
-            .where(APIKey.user_id == user_id)
-            .order_by(APIKey.created_at.desc())
-            .offset(skip)
-            .limit(limit)
-        )
-        return list(result.scalars().all())
+        """Get multiple API keys for a user with pagination."""
+        query = select(APIKey).where(APIKey.user_id == user_id)
 
-    async def get_active_key_count(
-        self,
-        db: AsyncSession,
-        *,
-        user_id: UUID
-    ) -> int:
-        """Get count of active API keys for a user."""
-        result = await db.execute(
-            select(func.count())
-            .where(and_(
-                APIKey.user_id == user_id,
-                APIKey.is_active == True,
+        if not include_expired:
+            now = datetime.now(timezone.utc)
+            query = query.where(
                 or_(
                     APIKey.expires_at.is_(None),
-                    APIKey.expires_at > datetime.now(timezone.utc)
+                    APIKey.expires_at > now
                 )
-            ))
-        )
-        return result.scalar()
+            )
 
+        # Sort by creation date, newest first
+        query = query.order_by(APIKey.created_at.desc())
+
+        if page > 0:
+            query = query.offset(page * limit)
+        query = query.limit(limit)
+
+        result = await db.execute(query)
+        return result.scalars().all()
+
+    async def update(
+        self, 
+        db: AsyncSession, 
+        *, 
+        db_obj: APIKey, 
+        obj_in: Union[APIKeyUpdate, dict[str, Any]],
+        user_id: UUID
+    ) -> APIKey:
+        """Update an API key."""
+        if db_obj.user_id != user_id:
+            raise ValueError("Cannot update API key that doesn't belong to the user")
+
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.model_dump(exclude_unset=True)
+
+        if 'is_active' in update_data:
+            return await super().update(db, db_obj=db_obj, obj_in={'is_active': update_data['is_active']})
+        
+        return db_obj
+
+    async def remove(self, db: AsyncSession, *, db_obj: APIKey) -> None:
+        """Remove an API key."""
+        await db.delete(db_obj)
+        await db.commit()
 
 api_key = CRUDAPIKey(APIKey)

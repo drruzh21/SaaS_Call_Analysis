@@ -210,6 +210,10 @@ services:
       - SERVER_HOST=https://${DOMAIN?Variable not set}
       # Allow explicit env var override for tests
       - SMTP_HOST=${SMTP_HOST}
+      - UVICORN_LOG_LEVEL=debug
+      - GUNICORN_LOG_LEVEL=debug
+      - PYTHONUNBUFFERED=1
+      - GUNICORN_CMD_ARGS="--capture-output --error-logfile - --access-logfile - --log-level debug"
     build:
       context: ./backend
       dockerfile: backend.dockerfile

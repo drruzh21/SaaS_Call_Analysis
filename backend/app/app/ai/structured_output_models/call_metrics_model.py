@@ -7,7 +7,7 @@ class CallAnalysisMetrics(BaseModel):
     """Model for detailed call analysis metrics"""
 
     # Contact establishment
-    is_manager_established_contact_analysis: str = Field(
+    is_manager_established_contact_comment: str = Field(
         description="Анализ приветствия, представления и обозначения цели звонка"
     )
     is_manager_established_contact: Score = Field(
@@ -15,7 +15,7 @@ class CallAnalysisMetrics(BaseModel):
     )
 
     # Speech quality
-    speech_quality_analysis: str = Field(
+    speech_quality_comment: str = Field(
         description="Анализ четкости и разборчивости речи, отсутствия слов-паразитов"
     )
     speech_quality: Score = Field(
@@ -23,7 +23,7 @@ class CallAnalysisMetrics(BaseModel):
     )
 
     # Initiative holding
-    is_manager_holding_initiative_analysis: str = Field(
+    is_manager_holding_initiative_comment: str = Field(
         description="Анализ управления диалогом и логики вопросов"
     )
     is_manager_holding_initiative: Score = Field(
@@ -31,7 +31,7 @@ class CallAnalysisMetrics(BaseModel):
     )
 
     # Problem identification
-    problem_identification_analysis: str = Field(
+    problem_identification_comment: str = Field(
         description="Анализ выявления потребностей и болей клиента"
     )
     problem_identification: Score = Field(
@@ -39,7 +39,7 @@ class CallAnalysisMetrics(BaseModel):
     )
 
     # Product presentation
-    product_presentation_analysis: str = Field(
+    product_presentation_comment: str = Field(
         description="Анализ презентации решения с привязкой к болям клиента"
     )
     product_presentation: Score = Field(
@@ -47,7 +47,7 @@ class CallAnalysisMetrics(BaseModel):
     )
 
     # Expertise demonstration
-    expertise_demonstration_analysis: str = Field(
+    expertise_demonstration_comment: str = Field(
         description="Анализ демонстрации экспертности в продукте и нише клиента"
     )
     expertise_demonstration: Score = Field(
@@ -55,7 +55,7 @@ class CallAnalysisMetrics(BaseModel):
     )
 
     # Objection handling
-    objection_handling_analysis: str = Field(
+    objection_handling_comment: str = Field(
         description="Анализ работы с истинными и ложными возражениями"
     )
     objection_handling: Score = Field(
@@ -63,7 +63,7 @@ class CallAnalysisMetrics(BaseModel):
     )
 
     # Deal closing
-    deal_closing_analysis: str = Field(
+    deal_closing_comment: str = Field(
         description="Анализ подталкивания клиента к следующему шагу"
     )
     deal_closing: Score = Field(
@@ -71,7 +71,7 @@ class CallAnalysisMetrics(BaseModel):
     )
 
     # Contact verification
-    contact_verification_analysis: str = Field(
+    contact_verification_comment: str = Field(
         description="Анализ проверки контактных данных клиента"
     )
     contact_verification: Score = Field(
@@ -79,7 +79,7 @@ class CallAnalysisMetrics(BaseModel):
     )
 
     # Next step setting
-    next_step_setting_analysis: str = Field(
+    next_step_setting_comment: str = Field(
         description="Анализ определения конкретного следующего шага и сроков"
     )
     next_step_setting: Score = Field(
@@ -87,14 +87,9 @@ class CallAnalysisMetrics(BaseModel):
     )
 
     # Tone of voice
-    tone_of_voice_analysis: str = Field(
+    tone_of_voice_comment: str = Field(
         description="Анализ тона голоса, эмоциональной вовлеченности и эмпатии менеджера"
     )
     tone_of_voice: Score = Field(
         description="Оценка за тон голоса и эмоциональную вовлеченность (0-1)"
-    )
-
-    # Final grade
-    final_grade: Score = Field(
-        description="Итоговая оценка за весь звонок (0-1)"
     )

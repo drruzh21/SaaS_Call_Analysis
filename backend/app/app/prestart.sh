@@ -1,10 +1,12 @@
 #! /usr/bin/env bash
-
+echo "Run prestart script"
 # Let the DB start
-python /app/app/backend_pre_start.py
+python -m app.backend_pre_start
 
 # Run migrations
 alembic upgrade head
 
 # Create initial data in DB
-python /app/app/initial_data.py
+python -m app.initial_data
+
+echo "Done prestart script"

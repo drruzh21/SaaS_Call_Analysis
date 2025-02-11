@@ -103,6 +103,8 @@ class CallAnalysisResult(Base):
     )
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     manager_fio: Mapped[str] = mapped_column(String(MAX_MANAGER_NAME_LENGTH))
+    call_duration: Mapped[float] = mapped_column(
+        Float(precision=METRIC_PRECISION, decimal_return_scale=METRIC_DECIMAL_SCALE), nullable=True)
 
     # Metrics
     is_manager_established_contact: Mapped[float] = mapped_column(Float(precision=METRIC_PRECISION, decimal_return_scale=METRIC_DECIMAL_SCALE), default=METRIC_DEFAULT_VALUE)

@@ -4,7 +4,13 @@ FROM ghcr.io/br3ndonland/inboard:fastapi-0.68-python3.11
 COPY ./app/ /app/
 WORKDIR /app/
 ENV HATCH_ENV_TYPE_VIRTUAL_PATH=.venv
-RUN hatch env prune && hatch env create production && pip install --upgrade setuptools
+RUN hatch env prune && hatch env create production && pip install --upgrade setuptools alembic
+
+# Copy prestart.sh, alembic.ini and alembic directory to the root /app directory as expected by the base image
+RUN cp /app/app/prestart.sh /app/prestart.sh && \
+    cp -r /app/app/alembic /app/alembic && \
+    cp /app/app/alembic.ini /app/alembic.ini && \
+    chmod +x /app/prestart.sh
 
 # /start Project-specific dependencies
 # RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -15,8 +21,7 @@ RUN hatch env prune && hatch env create production && pip install --upgrade setu
 # For development, Jupyter remote kernel
 # Using inside the container:
 # jupyter lab --ip=0.0.0.0 --allow-root --NotebookApp.custom_display_url=http://127.0.0.1:8888
-ARG INSTALL_JUPYTER=false
-RUN bash -c "if [ $INSTALL_JUPYTER == 'true' ] ; then pip install jupyterlab ; fi"
+
 RUN bash -c "pip install argon2_cffi"
 
 ARG BACKEND_APP_MODULE=app.main:app

@@ -17,7 +17,7 @@ router = APIRouter()
 @router.post("/analyze-call/", response_model=schemas.TaskResponse)
 async def create_call_analysis_task(
     request: CallAnalysisRequest,
-    current_user: Annotated[models.User, Depends(deps.get_current_active_user)]
+    current_user: Annotated[models.User, Depends(deps.get_current_user_by_api_key)]
 ) -> Any:
     """Create a new call analysis task.
     

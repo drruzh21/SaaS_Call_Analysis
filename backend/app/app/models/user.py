@@ -54,10 +54,10 @@ class User(Base):
 
     # Core fields
     id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), 
-        primary_key=True, 
-        index=True, 
-        default=uuid4,
+        UUID(as_uuid=True),
+        primary_key=True,
+        index=True,
+        default=uuid4,  # Генерируем UUID на стороне Python
         nullable=False
     )
     created: Mapped[datetime] = mapped_column(
@@ -75,7 +75,7 @@ class User(Base):
     )
 
     # User metadata
-    full_name: Mapped[str] = mapped_column(
+    full_name: Mapped[Optional[str]] = mapped_column(
         index=True, 
         nullable=True,
         comment="User's full name"
@@ -83,11 +83,11 @@ class User(Base):
     email: Mapped[str] = mapped_column(
         unique=True, 
         index=True, 
-        nullable=False,
+        nullable=False,  # Email всегда должен быть
         comment="User's email address, used for authentication"
     )
-    role: Mapped[str] = mapped_column(
-        nullable=False, 
+    role: Mapped[Optional[str]] = mapped_column(
+        nullable=True, 
         default="user",
         comment="User's role in the system (e.g., 'user', 'admin')"
     )
@@ -109,37 +109,38 @@ class User(Base):
     # Account status
     email_validated: Mapped[bool] = mapped_column(
         default=False,
-        nullable=False,
+        nullable=True,
         comment="Whether the user's email has been validated"
     )
     is_active: Mapped[bool] = mapped_column(
         default=True,
-        nullable=False,
+        nullable=True,
         comment="Whether the user account is active"
     )
     is_superuser: Mapped[bool] = mapped_column(
         default=False,
-        nullable=False,
+        nullable=True,
         comment="Whether the user has superuser privileges"
     )
     
     # Business logic fields
-    balance_rub: Mapped[int] = mapped_column(
-        nullable=False, 
+    balance_rub: Mapped[Optional[int]] = mapped_column(
+        nullable=True, 
         default=0,
         comment="User's balance in rubles"
     )
-    company_name_id: Mapped[int] = mapped_column(
+    company_name_id: Mapped[Optional[int]] = mapped_column(
         Integer,
         Sequence('user_company_name_id_seq'),
         server_default=text("nextval('user_company_name_id_seq')"),
         unique=True,
         index=True,
-        nullable=False,
+        nullable=True,
         comment="Unique identifier for the user's company"
     )
-    gpt_filter_prompt: Mapped[str] = mapped_column(
-        nullable=False,
+
+    gpt_filter_prompt: Mapped[Optional[str]] = mapped_column(
+        nullable=True,
         default=DEFAULT_CALL_ANALYSIS_PROMPT,
         comment="Custom GPT filter prompt for this user"
     )
