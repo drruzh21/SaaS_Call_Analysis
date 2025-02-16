@@ -114,4 +114,7 @@ class Settings(BaseSettings):
     GPT_MODEL: str = "gpt-4o-mini"
     OPENAI_API_KEY: str
 
+    # Hash secret key for API keys
+    HASH_SECRET_KEY: str
+
 settings = Settings()

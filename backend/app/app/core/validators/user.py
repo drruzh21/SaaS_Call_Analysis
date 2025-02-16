@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Optional, Any
+from typing import Any, Optional
 
 from fastapi import HTTPException, status
 from pydantic import EmailStr
@@ -262,3 +262,21 @@ async def validate_user_exists_by_id(db: AsyncSession, user_id: Any) -> models.U
             detail="User not found"
         )
     return user
+
+
+async def validate_balance(balance: int) -> None:
+    """
+    Validate user balance value.
+    
+    Args:
+        balance: Balance value to validate
+        
+    Raises:
+        HTTPException: If balance is invalid
+    """
+    if balance < 0:
+        logger.warning(f"Attempt to set negative balance: {balance}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Balance cannot be negative"
+        )
