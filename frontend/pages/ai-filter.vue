@@ -69,7 +69,7 @@
 import { Form, Field, ErrorMessage } from 'vee-validate';
 import { useAuthStore } from '@/stores'
 import { useRouter } from '#app'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { DEFAULT_CALL_ANALYSIS_PROMPT } from '@/constants/prompts'
 
 // Initialize stores and router
@@ -87,23 +87,74 @@ definePageMeta({
 
 // Form data with reactive state
 const formData = ref({
-    prompt: DEFAULT_CALL_ANALYSIS_PROMPT
+    prompt: ''
 })
 
-/**
- * Reset form to default values
- * This restores the default GPT prompt
- */
-const resetToDefault = () => {
-    formData.value.prompt = DEFAULT_CALL_ANALYSIS_PROMPT
+// Load current user's prompt
+const loadUserPrompt = async () => {
+    try {
+        const response = await fetch('/api/v1/users/me/gpt-filter-prompt', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load prompt');
+        }
+
+        const data = await response.json();
+        formData.value.prompt = data.gpt_filter_prompt;
+    } catch (error) {
+        console.error('Error loading prompt:', error);
+        // If loading fails, use default prompt
+        formData.value.prompt = DEFAULT_CALL_ANALYSIS_PROMPT;
+        showNotification({
+            type: 'error',
+            message: 'Failed to load current settings'
+        });
+    }
 }
 
-/**
- * Handle form submission
- * @param {Object} values - Form values
- */
-const handleSubmit = async (values: any) => {
-    // TODO: Implement settings save logic
-    console.log('Saving settings:', values)
+// Reset form to default values
+const resetToDefault = () => {
+    formData.value.prompt = DEFAULT_CALL_ANALYSIS_PROMPT;
 }
+
+// Handle form submission
+const handleSubmit = async (values: any) => {
+    try {
+        const response = await fetch('/api/v1/users/me/gpt-filter-prompt', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                gpt_filter_prompt: values.prompt
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update prompt');
+        }
+
+        showNotification({
+            type: 'success',
+            message: 'GPT filter settings saved successfully'
+        });
+
+    } catch (error) {
+        showNotification({
+            type: 'error',
+            message: 'Failed to save GPT filter settings'
+        });
+        console.error('Error saving settings:', error);
+    }
+}
+
+// Load user's prompt on component mount
+onMounted(() => {
+    loadUserPrompt();
+})
 </script>
