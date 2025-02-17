@@ -270,5 +270,36 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         """Check if user's email is validated."""
         return user.email_validated
 
+    async def update_balance(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: Any,
+        balance_rub: int
+    ) -> Optional[User]:
+        """
+        Updates user's balance.
+        
+        Args:
+            db: Async database session
+            user_id: User's UUID
+            balance_rub: New balance value
+            
+        Returns:
+            Updated User object or None if not found
+        """
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalars().first()
+        
+        if not user:
+            logger.error(f"User {user_id} not found for balance update")
+            return None
+        
+        user.balance_rub = balance_rub
+        await db.commit()
+        await db.refresh(user)
+        logger.info(f"Updated balance for user {user_id} to {balance_rub}")
+        return user
+
 
 user = CRUDUser(User)

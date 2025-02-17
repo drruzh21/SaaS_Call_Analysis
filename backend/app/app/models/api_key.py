@@ -41,7 +41,7 @@ class APIKey(Base):
         index=True
     )
     
-    key: Mapped[str] = mapped_column(
+    key_hash: Mapped[str] = mapped_column(
         String,
         unique=True,
         index=True,
@@ -79,4 +79,4 @@ class APIKey(Base):
     user: Mapped["User"] = relationship("User", back_populates="api_keys")
 
     def __repr__(self) -> str:
-        return f"<APIKey(id={self.id}, key={self.key[:8]}..., user_id={self.user_id}, name={self.name})>"
+        return f"<APIKey(id={self.id}, key={self.key_hash[:8]}..., user_id={self.user_id}, name={self.name})>"

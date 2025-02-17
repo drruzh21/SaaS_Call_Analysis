@@ -1,11 +1,14 @@
+import hashlib
+import hmac
 import secrets
 from datetime import datetime, timezone
 from typing import Any, Optional, Union
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.constants import GET_MULTI_MAX, MAX_API_KEY_GENERATION_ATTEMPTS, MAX_TOKEN_LENGTH
 from app.crud.base import CRUDBase
 from app.models import APIKey
@@ -13,51 +16,82 @@ from app.schemas import APIKeyCreate, APIKeyUpdate
 
 
 class CRUDAPIKey(CRUDBase[APIKey, APIKeyCreate, APIKeyUpdate]):
-    """CRUD operations for API keys."""
+    """CRUD operations for API keys with secure key handling."""
 
-    async def _generate_unique_key(self, db: AsyncSession, max_attempts=MAX_API_KEY_GENERATION_ATTEMPTS) -> str:
-        """Generate a unique API key that doesn't exist in the database."""
-        for _ in range(max_attempts):
-            key = secrets.token_urlsafe(MAX_TOKEN_LENGTH)
-            result = await db.execute(
-                select(func.count()).where(APIKey.key == key)
-            )
-            if result.scalar() == 0:
-                return key
-        raise RuntimeError("Failed to generate unique API key")
+    def _generate_api_key(self, attempts: int = MAX_API_KEY_GENERATION_ATTEMPTS) -> tuple[str, str]:
+        """
+        Generate a new API key and its hash.
+        
+        Returns:
+            tuple: (original_key, key_hash)
+        """
+        for _ in range(attempts):
+            key = f"{uuid4().hex}{secrets.token_urlsafe(MAX_TOKEN_LENGTH)}"
+            key_hash = self._hash_key(key)
+            return key, key_hash
+        raise Exception("Failed to generate a valid API key")
 
-    async def create(
-        self, 
-        db: AsyncSession, 
-        *, 
-        obj_in: APIKeyCreate,
-        user_id: UUID
-    ) -> APIKey:
-        """Create a new API key for a user.
+    def _hash_key(self, key: str) -> str:
+        """
+        Create a secure hash of the API key.
+        
+        Args:
+            key: Original API key
+            
+        Returns:
+            str: Hashed key
+        """
+        return hmac.new(
+            key=settings.HASH_SECRET_KEY.encode(),
+            msg=key.encode(),
+            digestmod=hashlib.sha256
+        ).hexdigest()
+
+    async def verify_key(self, db: AsyncSession, key: str) -> Optional[APIKey]:
+        """
+        Verify an API key against stored hash.
         
         Args:
             db: Database session
-            obj_in: API key creation data including name
-            user_id: ID of the user creating the key
+            key: API key to verify
             
         Returns:
-            Created API key object
+            Optional[APIKey]: API key object if valid
         """
-        key = await self._generate_unique_key(db)
-        
-        # Create the API key object with validated data
-        db_obj = APIKey(
-            key=key,
-            user_id=user_id,
-            name=obj_in.name,
-            expires_at=obj_in.expires_at,  # Already validated by Pydantic
-            is_active=obj_in.is_active
+        key_hash = self._hash_key(key)
+        result = await db.execute(
+            select(APIKey)
+            .where(APIKey.key_hash == key_hash)
+            .where(APIKey.is_active == True)
         )
+        return result.scalar_one_or_none()
+
+    async def create(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: UUID,
+        obj_in: APIKeyCreate
+    ) -> tuple[APIKey, str]:
+        """
+        Create a new API key.
         
-        db.add(db_obj)
-        await db.commit()
-        await db.refresh(db_obj)
-        return db_obj
+        Returns:
+            tuple: (api_key_object, original_key)
+        """
+        async with db.begin():
+            key, key_hash = self._generate_api_key()
+            db_obj = APIKey(
+                key_hash=key_hash,
+                user_id=user_id,
+                name=obj_in.name,
+                is_active=True,
+                created_at=datetime.now(timezone.utc)
+            )
+            db.add(db_obj)
+            await db.commit()
+            await db.refresh(db_obj)
+            return db_obj, key
 
     async def get_by_key(
         self, 

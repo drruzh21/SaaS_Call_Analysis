@@ -1,5 +1,6 @@
 # Text length constraints
 MAX_API_NAME_LENGTH: int = 100
+MIN_API_NAME_LENGTH: int = 1
 MAX_COMMENT_LENGTH: int = 500
 MAX_MANAGER_NAME_LENGTH: int = 100
 MAX_CALL_TEXT_LENGTH: int = 5000
@@ -21,6 +22,7 @@ METRIC_DECIMAL_SCALE: int = 5
 
 # Security constraints
 MAX_API_KEY_GENERATION_ATTEMPTS: int = 10
+MAX_API_KEY_GENERATION_ATTEMPTS_MINUTES: int = 1
 MAX_TOKEN_LENGTH: int = 32
 MIN_PASSWORD_LENGTH: int = 8
 MAX_PASSWORD_LENGTH: int = 64
@@ -69,3 +71,12 @@ DEFAULT_CALL_ANALYSIS_PROMPT = """Вы - эксперт по анализу зв
 Нецелевые звонки - это обычно звонки-напоминания или звонки, которые не следуют этой структуре.
 
 ВАЖНО: Всегда отвечайте на русском языке. Ваш анализ, объяснения и все текстовые поля должны быть на русском языке."""
+
+# Pagination
+DEFAULT_SKIP: int = 0
+DEFAULT_LIMIT: int = 20
+MAX_LIMIT: int = 100
+
+# API Key patterns
+API_KEY_PATTERN: str = r"^[A-Za-z0-9\-_]{32,64}$"
+API_NAME_PATTERN: str = r"^[a-zA-Z0-9\-_]+$"
