@@ -1,8 +1,7 @@
-from typing import Annotated, Any
+from typing import Annotated, Any, Optional
 import logging
-from typing import Annotated, Optional
+from fastapi import APIRouter, Body, Depends, Path, status, HTTPException
 
-from fastapi import APIRouter, Body, Depends, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas
@@ -12,7 +11,6 @@ from app.core.validators import validate_api_key_exists_by_name, validate_api_ke
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
 
 @router.post(
     "",
@@ -54,19 +52,15 @@ async def create_api_key(
             - 403: If user is not active
     """
     logger.info(f"User {current_user.email} attempting to create API key named: {api_key_in.name}")
-    
     api_key, original_key = await crud.api_key.create(
         db=db,
         user_id=current_user.id,
         obj_in=api_key_in
     )
-
     response = schemas.APIKeyResponse.model_validate(api_key)
     response['key'] = original_key
-    
     logger.info(f"API key created successfully for user {current_user.email}")
     return response
-
 
 @router.put(
     "/{name}",
@@ -108,25 +102,36 @@ async def update_api_key(
             - 404: If API key with given name doesn't exist
             - 403: If user doesn't own the API key
             - 401: If user is not authenticated
-            - 400: If new name is invalid
+            - 400: If new name is invalid or already exists
     """
-    # Log the update attempt
     logger.info(f"User {current_user.email} attempting to update API key named: {name}")
     
     # Validate the API key exists and is owned by the current user
     api_key = await validate_api_key_exists_by_name(db, name, current_user.id)
     await validate_api_key_ownership(api_key, current_user.id)
     
-    # Update the API key
-    api_key = await crud.api_key.update(
+    # Check if the API key name is being changed and validate uniqueness
+    if api_key_in.name and api_key_in.name != name:
+        existing_key = await crud.api_key.get_by_name(
+            db=db,
+            name=api_key_in.name,
+            user_id=current_user.id
+        )
+        if existing_key:
+            logger.warning(f"API key with name {api_key_in.name} already exists for user {current_user.email}")
+            raise HTTPException(
+                status_code=400,
+                detail="API key with this name already exists"
+            )
+    
+    updated_api_key = await crud.api_key.update(
         db=db,
         db_obj=api_key,
         obj_in=api_key_in
     )
     
     logger.info(f"API key {name} updated successfully by user {current_user.email}")
-    return schemas.APIKeyResponse.model_validate(api_key)
-
+    return schemas.APIKeyResponse.model_validate(updated_api_key)
 
 @router.get(
     "/me",
@@ -163,6 +168,7 @@ async def read_api_keys(
             - 401: If user is not authenticated
             - 403: If user is not active
     """
+    logger.info(f"Fetching API keys for user {current_user.email} with skip {pagination.skip} and limit {pagination.limit}")
     total = await crud.api_key.get_active_key_count(
         db=db,
         user_id=current_user.id
@@ -179,7 +185,6 @@ async def read_api_keys(
         skip=pagination.skip,
         limit=pagination.limit
     )
-
 
 @router.get(
     "/{name}",
@@ -219,12 +224,11 @@ async def read_api_key(
             - 403: If user doesn't own the API key
             - 401: If user is not authenticated
     """
-    # Validate the API key exists and is owned by the current user
+    logger.info(f"User {current_user.email} requested details for API key: {name}")
     api_key = await validate_api_key_exists_by_name(db, name, current_user.id)
     await validate_api_key_ownership(api_key, current_user.id)
     
     return schemas.APIKeyResponse.model_validate(api_key)
-
 
 @router.delete(
     "/{name}",
@@ -265,14 +269,11 @@ async def delete_api_key(
             - 403: If user doesn't own the API key
             - 401: If user is not authenticated
     """
-    # Log the deletion attempt
     logger.info(f"User {current_user.email} attempting to delete API key named: {name}")
-    
     api_key = await validate_api_key_exists_by_name(db, name, current_user.id)
     await validate_api_key_ownership(api_key, current_user.id)
     
-    # Delete the API key
-    api_key = await crud.api_key.remove(db=db, id=api_key.id)
+    deleted_api_key = await crud.api_key.remove(db=db, db_obj=api_key)
     
     logger.info(f"API key {name} deleted successfully by user {current_user.email}")
-    return schemas.APIKeyResponse.model_validate(api_key)
+    return schemas.APIKeyResponse.model_validate(deleted_api_key)
