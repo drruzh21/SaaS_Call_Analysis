@@ -23,7 +23,7 @@ METRIC_DECIMAL_SCALE: int = 5
 # Security constraints
 MAX_API_KEY_GENERATION_ATTEMPTS: int = 10
 MAX_API_KEY_GENERATION_ATTEMPTS_MINUTES: int = 1
-MAX_TOKEN_LENGTH: int = 32
+MAX_TOKEN_LENGTH: int = 512
 MIN_PASSWORD_LENGTH: int = 8
 MAX_PASSWORD_LENGTH: int = 64
 
@@ -33,16 +33,11 @@ FULL_NAME_REGEX: str = r"^[a-zA-Z\s\-']+$"
 PASSWORD_UPPERCASE_REGEX: str = r"[A-Z]"
 PASSWORD_LOWERCASE_REGEX: str = r"[a-z]"
 PASSWORD_DIGIT_REGEX: str = r"\d"
-SQL_PATTERNS: list[str] = [
+GPT_PROMPT_DANGEROUS_PATTERNS = [
     r'\b(select|insert|update|delete|drop|create|alter|truncate)\b',
-    r'\b(union|join|where|having|group\s+by|order\s+by)\b',
-    r'\b(and|or|not|is\s+null|is\s+not\s+null)\b',
     r'(--|#|\/\*|\*\/)',
-    r'\b(exec|execute|sp_|xp_)\b',
-    r'(;|\||&&|=|<|>|\+|-|\*|\/)',
-    r'(\|\||concat|char|substring|hex|unhex|ascii|bin|oct|decode|encode)',
     r'(\b1=1\b|\btrue=true\b|\bfalse=false\b)',
-    r'(\'|\\"|\\\')|\b(cast|convert)\b'
+    r'(\'|\\"|\\\')'
 ]
 
 # Email validation

@@ -23,7 +23,7 @@ class APIKey(Base):
    
     __table_args__ = (
         Index('ix_api_key_user_id_created_at', 'user_id', 'created_at'),
-        Index('ix_api_key_name', 'name'),
+        Index('ix_api_key_name_user_id', 'name', 'user_id', unique=True),
         CheckConstraint(
             'expires_at IS NULL OR expires_at > created_at',
             name='check_expiry_after_creation'

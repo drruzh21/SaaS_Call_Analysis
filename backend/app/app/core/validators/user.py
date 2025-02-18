@@ -10,6 +10,7 @@ from app import crud, models
 from app.core.constants import (
     EMAIL_REGEX,
     FULL_NAME_REGEX,
+    GPT_PROMPT_DANGEROUS_PATTERNS,
     MAX_EMAIL_LENGTH,
     MAX_FULL_NAME_LENGTH,
     MAX_GPT_FILTER_PROMPT_LENGTH,
@@ -20,7 +21,6 @@ from app.core.constants import (
     PASSWORD_DIGIT_REGEX,
     PASSWORD_LOWERCASE_REGEX,
     PASSWORD_UPPERCASE_REGEX,
-    SQL_PATTERNS,
 )
 
 logger = logging.getLogger(__name__)
@@ -228,9 +228,11 @@ async def validate_gpt_filter_prompt(prompt: str) -> str:
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Prompt too long (max {MAX_GPT_FILTER_PROMPT_LENGTH} chars)"
         )
-    
+
     sanitized = prompt.replace('\x00', '').strip()
-    if any(re.search(pattern, sanitized, re.IGNORECASE) for pattern in SQL_PATTERNS):
+    
+    if any(re.search(pattern, sanitized, re.IGNORECASE) 
+           for pattern in GPT_PROMPT_DANGEROUS_PATTERNS):
         logger.warning("Potential SQL injection detected in prompt")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

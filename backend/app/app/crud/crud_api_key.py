@@ -79,73 +79,42 @@ class CRUDAPIKey(CRUDBase[APIKey, APIKeyCreate, APIKeyUpdate]):
         Returns:
             tuple: (api_key_object, original_key)
         """
-        async with db.begin():
-            key, key_hash = self._generate_api_key()
-            db_obj = APIKey(
-                key_hash=key_hash,
-                user_id=user_id,
-                name=obj_in.name,
-                is_active=True,
-                created_at=datetime.now(timezone.utc)
-            )
-            db.add(db_obj)
-            await db.commit()
-            await db.refresh(db_obj)
-            return db_obj, key
-
-    async def get_by_key(
-        self, 
-        db: AsyncSession, 
-        *, 
-        key: str,
-        check_active: bool = True
-    ) -> Optional[APIKey]:
-        """Get API key by its value, optionally checking if it's active."""
-        query = select(APIKey).where(APIKey.key == key)
-        
-        if check_active:
-            now = datetime.now(timezone.utc)
-            query = query.where(
-                and_(
-                    APIKey.is_active == True,
-                    or_(
-                        APIKey.expires_at.is_(None),
-                        APIKey.expires_at > now
-                    )
-                )
-            )
-            
-        result = await db.execute(query)
-        return result.scalars().first()
+        key, key_hash = self._generate_api_key()
+        db_obj = APIKey(
+            key_hash=key_hash,
+            user_id=user_id,
+            name=obj_in.name,
+            is_active=obj_in.is_active,
+            created_at=datetime.now(timezone.utc)
+        )
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj, key
 
     async def get_multi_by_user(
         self, 
         db: AsyncSession, 
         *, 
-        user_id: UUID, 
-        page: int = 0,
-        limit: int = GET_MULTI_MAX,
-        include_expired: bool = False
+        user_id: UUID,
+        skip: int = 0,
+        limit: int = GET_MULTI_MAX
     ) -> list[APIKey]:
         """Get multiple API keys for a user with pagination."""
-        query = select(APIKey).where(APIKey.user_id == user_id)
-
-        if not include_expired:
-            now = datetime.now(timezone.utc)
-            query = query.where(
+        now = datetime.now(timezone.utc)
+        query = (
+            select(APIKey)
+            .where(APIKey.user_id == user_id)
+            .where(
                 or_(
                     APIKey.expires_at.is_(None),
                     APIKey.expires_at > now
                 )
             )
-
-        # Sort by creation date, newest first
-        query = query.order_by(APIKey.created_at.desc())
-
-        if page > 0:
-            query = query.offset(page * limit)
-        query = query.limit(limit)
-
+            .order_by(APIKey.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
         result = await db.execute(query)
         return result.scalars().all()
 
@@ -167,7 +136,14 @@ class CRUDAPIKey(CRUDBase[APIKey, APIKeyCreate, APIKeyUpdate]):
             update_data = obj_in.model_dump(exclude_unset=True)
 
         if 'is_active' in update_data:
-            return await super().update(db, db_obj=db_obj, obj_in={'is_active': update_data['is_active']})
+            db_obj.is_active = update_data['is_active']
+        
+        if 'name' in update_data and update_data['name'] is not None:
+            db_obj.name = update_data['name']
+        
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
         
         return db_obj
 
@@ -175,5 +151,56 @@ class CRUDAPIKey(CRUDBase[APIKey, APIKeyCreate, APIKeyUpdate]):
         """Remove an API key."""
         await db.delete(db_obj)
         await db.commit()
+
+    async def get_by_name(
+        self, 
+        db: AsyncSession, 
+        *, 
+        name: str,
+        user_id: UUID,
+        check_active: bool = False
+    ) -> Optional[APIKey]:
+        """Get API key by name for a specific user."""
+        query = select(APIKey).where(
+            and_(
+                APIKey.name == name,
+                APIKey.user_id == user_id
+            )
+        )
+        
+        if check_active:
+            now = datetime.now(timezone.utc)
+            query = query.where(
+                and_(
+                    APIKey.is_active == True,
+                    or_(
+                        APIKey.expires_at.is_(None),
+                        APIKey.expires_at > now
+                    )
+                )
+            )
+            
+        result = await db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def get_active_key_count(
+        self,
+        db: AsyncSession,
+        user_id: UUID
+    ) -> int:
+        """Get count of active API keys for a user."""
+        now = datetime.now(timezone.utc)
+        query = select(func.count()).select_from(APIKey).where(
+            and_(
+                APIKey.user_id == user_id,
+                APIKey.is_active == True,
+                or_(
+                    APIKey.expires_at.is_(None),
+                    APIKey.expires_at > now
+                )
+            )
+        )
+        result = await db.execute(query)
+        return result.scalar_one()
 
 api_key = CRUDAPIKey(APIKey)

@@ -4,12 +4,12 @@ This module provides a clean interface for sending emails and its Mail.ru implem
 Following SOLID principles, particularly Interface Segregation and Dependency Inversion.
 """
 
-from abc import ABC, abstractmethod
 import logging
+import smtplib
 import ssl
+from abc import ABC, abstractmethod
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import smtplib
 from typing import Protocol
 
 from app.core.config import settings
