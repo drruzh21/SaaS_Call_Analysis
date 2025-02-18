@@ -1,13 +1,12 @@
-from typing import Annotated, Any, Optional
 import logging
-from fastapi import APIRouter, Body, Depends, Path, status, HTTPException
+from typing import Annotated
 
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas
 from app.api import deps
-from app.core.constants import MAX_API_NAME_LENGTH, MIN_API_NAME_LENGTH
-from app.core.validators import validate_api_key_exists_by_name, validate_api_key_ownership
+from app.core.validators import validate_api_key_ownership, validate_api_key_for_operation
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -52,13 +51,34 @@ async def create_api_key(
             - 403: If user is not active
     """
     logger.info(f"User {current_user.email} attempting to create API key named: {api_key_in.name}")
+    
+    existing_key = await crud.api_key.get_by_name(
+        db=db,
+        name=api_key_in.name,
+        user_id=current_user.id
+    )
+    if existing_key:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="API key with this name already exists"
+        )
+    
     api_key, original_key = await crud.api_key.create(
         db=db,
         user_id=current_user.id,
         obj_in=api_key_in
     )
-    response = schemas.APIKeyResponse.model_validate(api_key)
-    response['key'] = original_key
+    
+    response_data = {
+        "id": api_key.id,
+        "name": api_key.name,
+        "created_at": api_key.created_at,
+        "expires_at": api_key.expires_at,
+        "is_active": api_key.is_active,
+        "key": original_key
+    }
+    
+    response = schemas.APIKeyResponse.model_validate(response_data)
     logger.info(f"API key created successfully for user {current_user.email}")
     return response
 
@@ -77,57 +97,29 @@ async def create_api_key(
 async def update_api_key(
     *,
     db: AsyncSession = Depends(deps.get_db),
-    name: str = Path(..., min_length=MIN_API_NAME_LENGTH, max_length=MAX_API_NAME_LENGTH),
+    name: str,
     api_key_in: schemas.APIKeyUpdate,
     current_user: models.User = Depends(deps.get_current_active_user)
-) -> Optional[schemas.APIKeyResponse]:
+) -> schemas.APIKeyResponse:
     """
-    Update an existing API key's properties.
-    
-    This endpoint allows modifying an API key's name or active status.
-    Only the key owner can perform this operation, and only certain fields
-    can be modified for security reasons.
-    
-    Args:
-        db: Async database session for database operations
-        name: Current name of the API key to update
-        api_key_in: Update data containing new name and/or active status
-        current_user: Currently authenticated user requesting the update
-        
-    Returns:
-        APIKeyResponse: Updated API key data
-        
-    Raises:
-        HTTPException:
-            - 404: If API key with given name doesn't exist
-            - 403: If user doesn't own the API key
-            - 401: If user is not authenticated
-            - 400: If new name is invalid or already exists
+    Update an existing API key.
     """
     logger.info(f"User {current_user.email} attempting to update API key named: {name}")
     
-    # Validate the API key exists and is owned by the current user
-    api_key = await validate_api_key_exists_by_name(db, name, current_user.id)
-    await validate_api_key_ownership(api_key, current_user.id)
+    api_key = await validate_api_key_for_operation(
+        db=db,
+        name=name,
+        user_id=current_user.id,
+        operation="update"
+    )
     
-    # Check if the API key name is being changed and validate uniqueness
-    if api_key_in.name and api_key_in.name != name:
-        existing_key = await crud.api_key.get_by_name(
-            db=db,
-            name=api_key_in.name,
-            user_id=current_user.id
-        )
-        if existing_key:
-            logger.warning(f"API key with name {api_key_in.name} already exists for user {current_user.email}")
-            raise HTTPException(
-                status_code=400,
-                detail="API key with this name already exists"
-            )
+    await validate_api_key_ownership(api_key, current_user.id)
     
     updated_api_key = await crud.api_key.update(
         db=db,
         db_obj=api_key,
-        obj_in=api_key_in
+        obj_in=api_key_in,
+        user_id=current_user.id
     )
     
     logger.info(f"API key {name} updated successfully by user {current_user.email}")
@@ -179,11 +171,22 @@ async def read_api_keys(
         skip=pagination.skip,
         limit=pagination.limit
     )
+
+    page = (pagination.skip // pagination.limit) + 1
+    pages = (total + pagination.limit - 1) // pagination.limit
+    has_next = page < pages
+    has_prev = page > 1
+    
     return schemas.PaginatedList(
         items=items,
         total=total,
         skip=pagination.skip,
-        limit=pagination.limit
+        limit=pagination.limit,
+        page=page,
+        pages=pages,
+        per_page=pagination.limit,
+        has_next=has_next,
+        has_prev=has_prev
     )
 
 @router.get(
@@ -202,42 +205,22 @@ async def read_api_key(
     db: AsyncSession = Depends(deps.get_db),
     name: str,
     current_user: models.User = Depends(deps.get_current_active_user)
-) -> Optional[schemas.APIKeyResponse]:
-    """
-    Retrieve detailed information about a specific API key.
-    
-    This endpoint returns detailed information about an API key identified by its name.
-    Only the key owner can access this information. Sensitive data like the key hash
-    is excluded from the response.
-    
-    Args:
-        db: Async database session for database operations
-        name: Name of the API key to retrieve
-        current_user: Currently authenticated user requesting the key details
-        
-    Returns:
-        APIKeyResponse: API key details excluding sensitive information
-        
-    Raises:
-        HTTPException:
-            - 404: If API key with given name doesn't exist
-            - 403: If user doesn't own the API key
-            - 401: If user is not authenticated
-    """
-    logger.info(f"User {current_user.email} requested details for API key: {name}")
-    api_key = await validate_api_key_exists_by_name(db, name, current_user.id)
-    await validate_api_key_ownership(api_key, current_user.id)
-    
+) -> schemas.APIKeyResponse:
+    api_key = await validate_api_key_for_operation(
+        db=db,
+        name=name,
+        user_id=current_user.id,
+        operation="access"
+    )
     return schemas.APIKeyResponse.model_validate(api_key)
 
 @router.delete(
     "/{name}",
-    response_model=schemas.APIKeyResponse,
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete API Key",
-    description="Permanently deletes an API key. This action cannot be undone.",
+    description="Deletes an existing API key. Only the key owner can perform this operation.",
     responses={
-        200: {"description": "API key deleted successfully"},
+        204: {"description": "API key deleted successfully"},
         404: {"description": "API key not found"},
         403: {"description": "Not enough permissions"}
     }
@@ -247,33 +230,12 @@ async def delete_api_key(
     db: AsyncSession = Depends(deps.get_db),
     name: str,
     current_user: models.User = Depends(deps.get_current_active_user)
-) -> Optional[schemas.APIKeyResponse]:
-    """
-    Permanently delete an API key.
-    
-    This endpoint permanently deletes an API key identified by its name.
-    Only the key owner can perform this operation. This action cannot be undone,
-    and any services using this key will need to be updated.
-    
-    Args:
-        db: Async database session for database operations
-        name: Name of the API key to delete
-        current_user: Currently authenticated user requesting the deletion
-        
-    Returns:
-        APIKeyResponse: Deleted API key data
-        
-    Raises:
-        HTTPException:
-            - 404: If API key with given name doesn't exist
-            - 403: If user doesn't own the API key
-            - 401: If user is not authenticated
-    """
-    logger.info(f"User {current_user.email} attempting to delete API key named: {name}")
-    api_key = await validate_api_key_exists_by_name(db, name, current_user.id)
-    await validate_api_key_ownership(api_key, current_user.id)
-    
-    deleted_api_key = await crud.api_key.remove(db=db, db_obj=api_key)
-    
-    logger.info(f"API key {name} deleted successfully by user {current_user.email}")
-    return schemas.APIKeyResponse.model_validate(deleted_api_key)
+) -> None:
+    api_key = await validate_api_key_for_operation(
+        db=db,
+        name=name,
+        user_id=current_user.id,
+        operation="delete"
+    )
+    await crud.api_key.remove(db, db_obj=api_key)
+    return None

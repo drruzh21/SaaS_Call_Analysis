@@ -18,7 +18,7 @@ from app.core.constants import (
 from app.db.base_class import Base
 
 if TYPE_CHECKING:
-    from . import APIKey, Token  # noqa: F401
+    from . import APIKey, Token, CallAnalysisResult  # noqa: F401
 
 
 class User(Base):
@@ -57,7 +57,7 @@ class User(Base):
         UUID(as_uuid=True),
         primary_key=True,
         index=True,
-        default=uuid4,  # Генерируем UUID на стороне Python
+        default=uuid4,
         nullable=False
     )
     created: Mapped[datetime] = mapped_column(
@@ -83,7 +83,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(
         unique=True, 
         index=True, 
-        nullable=False,  # Email всегда должен быть
+        nullable=False,
         comment="User's email address, used for authentication"
     )
     role: Mapped[Optional[str]] = mapped_column(
@@ -129,13 +129,13 @@ class User(Base):
         default=0,
         comment="User's balance in rubles"
     )
-    company_name_id: Mapped[Optional[int]] = mapped_column(
+    company_name_id: Mapped[int] = mapped_column(
         Integer,
         Sequence('user_company_name_id_seq'),
         server_default=text("nextval('user_company_name_id_seq')"),
         unique=True,
         index=True,
-        nullable=True,
+        nullable=False,
         comment="Unique identifier for the user's company"
     )
 
@@ -155,6 +155,12 @@ class User(Base):
     api_keys: Mapped[list["APIKey"]] = relationship(
         back_populates="user", 
         lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
+    call_analyses: Mapped[list["CallAnalysisResult"]] = relationship(
+        "CallAnalysisResult", 
+        foreign_keys="[CallAnalysisResult.company_name_id]",
+        back_populates="user",
         cascade="all, delete-orphan"
     )
 

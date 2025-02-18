@@ -2,12 +2,12 @@
 
 import logging
 from datetime import datetime
-from app.core.constants import METRIC_DEFAULT_VALUE
 
 from app.ai.ai_agents.call_metrics_analyzer import CallMetricsAnalyzer
 from app.ai.ai_agents.call_overall_analyzer import CallOverallAnalyzer
 from app.ai.ai_agents.objections_analyzer import ObjectionsAnalyzer
 from app.ai.structured_output_models.call_metrics_model import CallAnalysisMetrics
+from app.core.constants import METRIC_DEFAULT_VALUE
 from app.models.call_analysis import CallAnalysisResult, Objection
 
 logger = logging.getLogger(__name__)
@@ -191,8 +191,9 @@ if __name__ == "__main__":
     import os
     import sys
     from pathlib import Path
+
     from dotenv import load_dotenv
-    
+
     # Get the absolute path to the app directory (2 levels up from this file)
     app_dir = Path(__file__).resolve().parent.parent.parent
     
@@ -242,7 +243,7 @@ if __name__ == "__main__":
     '''
     # Initialize real analyzers with OpenAI API key from settings
     from app.core.config import settings
-    
+
     # Create real analyzers
     metrics_analyzer = CallMetricsAnalyzer(api_key=settings.OPENAI_API_KEY)
     overall_analyzer = CallOverallAnalyzer(api_key=settings.OPENAI_API_KEY)

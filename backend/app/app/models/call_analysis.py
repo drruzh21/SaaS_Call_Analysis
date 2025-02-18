@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import CheckConstraint, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -20,6 +20,8 @@ from app.core.constants import (
 )
 from app.db.base_class import Base
 
+if TYPE_CHECKING:
+    from .user import User
 
 class CallObjection(Base):
     """Join table for many-to-many relationship between calls and objections"""
@@ -145,4 +147,10 @@ class CallAnalysisResult(Base):
         "Objection", 
         secondary="call_objections",
         back_populates="calls"
+    )
+
+    user: Mapped["User"] = relationship(
+        "User", 
+        foreign_keys=[company_name_id],
+        back_populates="call_analyses"
     )

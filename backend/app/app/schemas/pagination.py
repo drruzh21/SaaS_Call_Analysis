@@ -33,6 +33,8 @@ class PaginatedList(BaseModel, Generic[T]):
     """Generic schema for paginated lists."""
     items: Sequence[T]
     total: int = Field(description="Total number of records available")
+    skip: int = Field(description="Number of records skipped")
+    limit: int = Field(description="Maximum number of records per page")
     page: int = Field(description="Current page number")
     pages: int = Field(description="Total number of pages")
     per_page: int = Field(description="Number of items per page")
@@ -45,6 +47,8 @@ class PaginatedList(BaseModel, Generic[T]):
             "example": {
                 "items": [],
                 "total": 100,
+                "skip": 0,
+                "limit": 20,
                 "page": 1,
                 "pages": 5,
                 "per_page": 20,

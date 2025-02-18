@@ -45,9 +45,10 @@
                             <div class="flex justify-start space-x-4">
                                 <button
                                     type="submit"
+                                    :disabled="isLoading"
                                     class="inline-flex justify-center rounded-md border border-transparent bg-rose-500 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
                                 >
-                                    Сохранить настройки
+                                    {{ isLoading ? 'Сохранение...' : 'Сохранить настройки' }}
                                 </button>
                                 <button
                                     type="button"
@@ -67,53 +68,65 @@
 
 <script setup lang="ts">
 import { Form, Field, ErrorMessage } from 'vee-validate';
-import { useAuthStore } from '@/stores'
+import { useAuthStore, useToastStore } from '@/stores'
 import { useRouter } from '#app'
 import { ref, onMounted } from 'vue'
 import { DEFAULT_CALL_ANALYSIS_PROMPT } from '@/constants/prompts'
 
-// Initialize stores and router
+// Initialize stores
 const authStore = useAuthStore()
+const toast = useToastStore()
 const router = useRouter()
-
-// Route guard - redirect to login if not authenticated
-if (!authStore.loggedIn) {
-    router.push('/login')
-}
-
-definePageMeta({
-    layout: "default",
-})
 
 // Form data with reactive state
 const formData = ref({
     prompt: ''
 })
 
+const isLoading = ref(false)
+
 // Load current user's prompt
 const loadUserPrompt = async () => {
+    isLoading.value = true;
     try {
+        // Ждем инициализации токенов
+        await authStore.tokenStore.refreshTokens();
+        
+        if (!authStore.tokenStore.token) {
+            router.push('/login');
+            return;
+        }
+
         const response = await fetch('/api/v1/users/me/gpt-filter-prompt', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-            }
+                'Authorization': `Bearer ${authStore.tokenStore.token}`
+            },
+            credentials: 'include'
         });
+
+        if (response.status === 401 || response.status === 403) {
+            router.push('/login');
+            return;
+        }
 
         if (!response.ok) {
             throw new Error('Failed to load prompt');
         }
 
         const data = await response.json();
-        formData.value.prompt = data.gpt_filter_prompt;
+        formData.value.prompt = data.gpt_filter_prompt || DEFAULT_CALL_ANALYSIS_PROMPT;
     } catch (error) {
         console.error('Error loading prompt:', error);
-        // If loading fails, use default prompt
         formData.value.prompt = DEFAULT_CALL_ANALYSIS_PROMPT;
-        showNotification({
-            type: 'error',
-            message: 'Failed to load current settings'
+        toast.addNotice({
+            title: "Ошибка загрузки",
+            content: "Не удалось загрузить текущие настройки",
+            icon: "error"
         });
+    } finally {
+        isLoading.value = false;
     }
 }
 
@@ -125,36 +138,57 @@ const resetToDefault = () => {
 // Handle form submission
 const handleSubmit = async (values: any) => {
     try {
+        await authStore.tokenStore.refreshTokens()
+        if (!authStore.loggedIn || !authStore.tokenStore.token) {
+            router.push('/login');
+            return;
+        }
+
         const response = await fetch('/api/v1/users/me/gpt-filter-prompt', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authStore.tokenStore.token}`
             },
+            credentials: 'include',
             body: JSON.stringify({
                 gpt_filter_prompt: values.prompt
             })
         });
 
+        if (response.status === 401 || response.status === 403) {
+            router.push('/login');
+            return;
+        }
+
         if (!response.ok) {
             throw new Error('Failed to update prompt');
         }
 
-        showNotification({
-            type: 'success',
-            message: 'GPT filter settings saved successfully'
+        toast.addNotice({
+            title: "Настройки сохранены",
+            content: "Настройки AI фильтра успешно обновлены"
         });
 
     } catch (error) {
-        showNotification({
-            type: 'error',
-            message: 'Failed to save GPT filter settings'
+        toast.addNotice({
+            title: "Ошибка сохранения",
+            content: "Не удалось сохранить настройки",
+            icon: "error"
         });
         console.error('Error saving settings:', error);
     }
 }
 
-// Load user's prompt on component mount
-onMounted(() => {
+// Route guard
+onMounted(async () => {
+    await authStore.$init;
+    await authStore.tokenStore.refreshTokens();
+    
+    if (!authStore.loggedIn || !authStore.tokenStore.token) {
+        router.push('/login');
+        return;
+    }
     loadUserPrompt();
 })
 </script>

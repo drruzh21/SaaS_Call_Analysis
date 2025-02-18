@@ -81,13 +81,13 @@ async def update_user_gpt_filter_prompt(
     Raises:
         HTTPException: If prompt validation fails or user not found
     """
-    await validate_gpt_filter_prompt(prompt_in.gpt_filter_prompt)
+    validated_prompt = await validate_gpt_filter_prompt(prompt_in.gpt_filter_prompt)
     await validate_user_exists_by_id(db, current_user.id)
     
     updated_user = await crud.user.update_gpt_filter_prompt(
         db=db,
         user_id=current_user.id,
-        gpt_filter_prompt=prompt_in.gpt_filter_prompt
+        gpt_filter_prompt=validated_prompt
     )
     return {"gpt_filter_prompt": updated_user.gpt_filter_prompt}
 
