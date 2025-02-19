@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
-from sqlalchemy import CheckConstraint, DateTime, Integer, Sequence, text
+from sqlalchemy import CheckConstraint, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -129,15 +129,6 @@ class User(Base):
         default=0,
         comment="User's balance in rubles"
     )
-    company_name_id: Mapped[int] = mapped_column(
-        Integer,
-        Sequence('user_company_name_id_seq'),
-        server_default=text("nextval('user_company_name_id_seq')"),
-        unique=True,
-        index=True,
-        nullable=False,
-        comment="Unique identifier for the user's company"
-    )
 
     gpt_filter_prompt: Mapped[Optional[str]] = mapped_column(
         nullable=True,
@@ -159,7 +150,7 @@ class User(Base):
     )
     call_analyses: Mapped[list["CallAnalysisResult"]] = relationship(
         "CallAnalysisResult", 
-        foreign_keys="[CallAnalysisResult.company_name_id]",
+        foreign_keys="[CallAnalysisResult.user_id]",
         back_populates="user",
         cascade="all, delete-orphan"
     )

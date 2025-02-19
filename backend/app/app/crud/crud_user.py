@@ -103,7 +103,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             update_data["email_validated"] = False
             
         # Remove sensitive fields that shouldn't be updated directly
-        sensitive_fields = {"id", "created", "modified", "company_name_id"}
+        sensitive_fields = {"id", "created", "modified"}
         for field in sensitive_fields:
             update_data.pop(field, None)
             

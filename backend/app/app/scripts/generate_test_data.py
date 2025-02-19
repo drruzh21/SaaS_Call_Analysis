@@ -39,14 +39,14 @@ OBJECTIONS = [
     "Не принимаем решения"
 ]
 
-def get_manager_name(company_name_id: int) -> str:
+def get_manager_name(user_id: int) -> str:
     """Получить случайное имя менеджера для указанной компании."""
-    if company_name_id == 7:
+    if user_id == 7:
         return random.choice(COMPANY_7_MANAGERS)
-    elif company_name_id == 8:
+    elif user_id == 8:
         return random.choice(COMPANY_8_MANAGERS)
     else:
-        raise ValueError(f"Unexpected company_name_id: {company_name_id}")
+        raise ValueError(f"Unexpected user_id: {user_id}")
 
 def generate_random_date() -> datetime:
     """Сгенерировать случайную дату в декабре 2024 года."""
@@ -95,7 +95,7 @@ async def create_objections(db: AsyncSession) -> list[Objection]:
 
 async def create_call_analysis(
     db: AsyncSession,
-    company_name_id: int,
+    user_id: int,
     objections: list[Objection],
     count: int = 150
 ) -> None:
@@ -120,9 +120,9 @@ async def create_call_analysis(
         
         # Создать результат анализа звонка
         call = CallAnalysisResult(
-            company_name_id=company_name_id,
+            user_id=user_id,
             date=generate_random_date(),
-            manager_fio=get_manager_name(company_name_id),
+            manager_fio=get_manager_name(user_id),
             # Метрики
             **metrics,
             final_grade=final_grade,
@@ -162,10 +162,10 @@ async def main():
             objections = await create_objections(db)
             
             # Создаем результаты анализа звонков для компании 7
-            await create_call_analysis(db, company_name_id=7, objections=objections)
+            await create_call_analysis(db, user_id=7, objections=objections)
             
             # Создаем результаты анализа звонков для компании 8
-            await create_call_analysis(db, company_name_id=8, objections=objections)
+            await create_call_analysis(db, user_id=8, objections=objections)
             
             print("Тестовые данные успешно сгенерированы!")
         

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, List
 
 from sqlalchemy import CheckConstraint, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import (
@@ -97,9 +98,9 @@ class CallAnalysisResult(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    company_name_id: Mapped[int] = mapped_column(
-        Integer, 
-        ForeignKey("user.company_name_id"), 
+    user_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), 
+        ForeignKey("user.id"), 
         index=True,
         nullable=False
     )
@@ -151,6 +152,6 @@ class CallAnalysisResult(Base):
 
     user: Mapped["User"] = relationship(
         "User", 
-        foreign_keys=[company_name_id],
+        foreign_keys=[user_id],
         back_populates="call_analyses"
     )

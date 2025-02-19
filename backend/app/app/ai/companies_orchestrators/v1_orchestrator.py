@@ -260,7 +260,7 @@ if __name__ == "__main__":
     analysis_result = CallAnalysisResult(
         # Required fields from database schema
         id=1,
-        company_name_id=1,  # This should be a valid company ID from your database
+        user_id=1,  # This should be a valid User ID from your database
         date=datetime.utcnow(),
         
         # Basic call information
