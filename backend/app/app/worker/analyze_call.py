@@ -87,7 +87,7 @@ def analyze_call(self, request_dict: Dict[str, Any]) -> dict:
             logger.warning("Creating initial analysis result object")
             analysis_result = CallAnalysisResult(
                 id=1,
-                company_name_id=1,
+                user_id=1,
                 lead_url="https://crm.example.com/lead/123",
                 call_text=request.text,
                 call_duration=request.call_duration,
