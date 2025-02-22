@@ -1,16 +1,23 @@
 FROM ghcr.io/br3ndonland/inboard:fastapi-0.68-python3.11
 
-# Use file.name* in case it doesn't exist in the repo
-COPY ./app/ /app/
 WORKDIR /app/
-ENV HATCH_ENV_TYPE_VIRTUAL_PATH=.venv
-RUN hatch env prune && hatch env create production && pip install --upgrade setuptools alembic
+COPY ./app/ /app/
 
-# Copy prestart.sh, alembic.ini and alembic directory to the root /app directory as expected by the base image
-RUN cp /app/app/prestart.sh /app/prestart.sh && \
-    cp -r /app/app/alembic /app/alembic && \
-    cp /app/app/alembic.ini /app/alembic.ini && \
-    chmod +x /app/prestart.sh
+ENV HATCH_ENV_TYPE_VIRTUAL_PATH=.venv
+RUN hatch env prune && hatch env create production
+RUN pip install --upgrade pip
+RUN pip install --upgrade setuptools
+RUN pip install psycopg2-binary
+
+# PostgreSQL environment variables
+ENV POSTGRES_SERVER=${POSTGRES_SERVER:-db}
+ENV POSTGRES_USER=${POSTGRES_USER}
+ENV POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+ENV POSTGRES_DB=${POSTGRES_DB:-app}
+ENV POSTGRES_PORT=${POSTGRES_PORT:-5432}
+
+# Make prestart.sh executable
+RUN chmod +x /app/prestart.sh
 
 # /start Project-specific dependencies
 # RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -28,4 +35,7 @@ ARG BACKEND_APP_MODULE=app.main:app
 ARG BACKEND_PRE_START_PATH=/app/prestart.sh
 ARG BACKEND_PROCESS_MANAGER=gunicorn
 ARG BACKEND_WITH_RELOAD=false
-ENV APP_MODULE=${BACKEND_APP_MODULE} PRE_START_PATH=${BACKEND_PRE_START_PATH} PROCESS_MANAGER=${BACKEND_PROCESS_MANAGER} WITH_RELOAD=${BACKEND_WITH_RELOAD}
+ENV APP_MODULE=${BACKEND_APP_MODULE} \
+    PRE_START_PATH=${BACKEND_PRE_START_PATH} \
+    PROCESS_MANAGER=${BACKEND_PROCESS_MANAGER} \
+    WITH_RELOAD=${BACKEND_WITH_RELOAD}
