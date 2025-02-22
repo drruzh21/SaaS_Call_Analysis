@@ -39,7 +39,6 @@ async def init_db(db: AsyncSession) -> None:
                 email_validated=True,  # Sensible default for superuser
                 is_active=True,  # Sensible default for superuser
                 full_name="System Administrator",  # Optional but helpful
-                company_name_id=1  # Required field
             )
             logger.info(f"Prepared user creation data: {user_in.model_dump(exclude={'password'})}")
             

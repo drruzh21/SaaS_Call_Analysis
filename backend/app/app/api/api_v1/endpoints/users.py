@@ -14,6 +14,7 @@ from app.core.validators import (
     validate_password_update,
     validate_user_exists,
 )
+from app.schemas import PaginatedList, PaginationParams
 
 router = APIRouter()
 
@@ -114,25 +115,44 @@ async def read_user(
     return current_user
 
 
-@router.get("/all", response_model=List[schemas.User])
+@router.get("/all", response_model=PaginatedList[schemas.User])
 async def read_all_users(
     *,
     db: Annotated[AsyncSession, Depends(deps.get_db)],
-    page: int = 0,
+    pagination: PaginationParams = Depends(),
     current_user: Annotated[models.User, Depends(deps.get_current_active_superuser)],
 ) -> Any:
     """
-    Retrieve all users (superuser only).
+    Retrieve all users with pagination (superuser only).
     
     Args:
-        page: Page number for pagination
+        pagination: Pagination parameters
         current_user: Current authenticated superuser
         
     Returns:
-        List of user objects
+        Paginated list of user objects
     """
-    users = await crud.user.get_multi(db, page=page)
-    return users
+    total = await crud.user.count(db)
+    users = await crud.user.get_multi(
+        db, 
+        skip=pagination.skip, 
+        limit=pagination.limit
+    )
+    
+    pages = (total + pagination.limit - 1) // pagination.limit
+    current_page = (pagination.skip // pagination.limit) + 1
+    
+    return PaginatedList[schemas.User](
+        items=users,
+        total=total,
+        skip=pagination.skip,
+        limit=pagination.limit,
+        page=current_page,
+        pages=pages,
+        per_page=pagination.limit,
+        has_next=current_page < pages,
+        has_prev=current_page > 1
+    )
 
 
 @router.post("/totp/new", response_model=schemas.NewTOTP)

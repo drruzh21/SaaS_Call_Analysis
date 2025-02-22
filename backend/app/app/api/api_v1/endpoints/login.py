@@ -8,10 +8,7 @@ from app import crud, models, schemas
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.utilities import (
-    send_magic_login_email,
-    send_reset_password_email,
-)
+from app.utilities import send_magic_login_email, send_reset_password_email
 
 router = APIRouter()
 

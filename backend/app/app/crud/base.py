@@ -2,10 +2,11 @@ from typing import Any, Dict, Generic, Optional, Type, TypeVar, Union
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.core.config import settings
+from app.core import constants
 from app.db.base_class import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -29,12 +30,14 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         result = await db.execute(select(self.model).filter(self.model.id == id))
         return result.scalars().first()
 
-    async def get_multi(self, db: AsyncSession, *, page: int = 0, page_break: bool = False) -> list[ModelType]:
-        query = select(self.model)
-        if not page_break:
-            if page > 0:
-                query = query.offset(page * settings.MULTI_MAX)
-            query = query.limit(settings.MULTI_MAX)
+    async def get_multi(
+        self, 
+        db: AsyncSession, 
+        *, 
+        skip: int = constants.DEFAULT_SKIP,
+        limit: int = constants.DEFAULT_LIMIT
+    ) -> list[ModelType]:
+        query = select(self.model).offset(skip).limit(limit)
         result = await db.execute(query)
         return result.scalars().all()
 
@@ -72,3 +75,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         await db.delete(obj)
         await db.commit()
         return obj
+
+    async def count(self, db: AsyncSession) -> int:
+        result = await db.execute(select(func.count()).select_from(self.model))
+        return result.scalar_one()

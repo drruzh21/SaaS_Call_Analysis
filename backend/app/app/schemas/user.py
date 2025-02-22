@@ -25,7 +25,7 @@ class UserBase(BaseModel):
     is_active: Optional[bool] = Field(True, description="Whether user account is active")
     is_superuser: Optional[bool] = Field(False, description="Whether user has superuser privileges")
     full_name: Optional[str] = Field(None, description="User's full name")
-    company_name_id: Optional[int] = Field(None, description="ID of user's company")
+    user_id: Optional[int] = Field(None, description="ID of user's company")
     gpt_filter_prompt: Optional[str] = Field(None, description="Custom GPT filter prompt")
     balance_rub: Optional[int] = Field(
         None, 
@@ -53,7 +53,6 @@ class UserCreate(UserBase):
                 "email": "user@example.com",
                 "password": "strongpassword123",
                 "full_name": "John Doe",
-                "company_name_id": 1,
                 "role": "user"
             }
         }
@@ -106,7 +105,6 @@ class User(UserInDBBase):
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "email": "user@example.com",
                 "full_name": "John Doe",
-                "company_name_id": 1,
                 "role": "user",
                 "balance_rub": 1000,
                 "is_active": True,

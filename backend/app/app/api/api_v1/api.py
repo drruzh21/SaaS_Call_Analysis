@@ -1,13 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.api_v1.endpoints import (
-    api_keys,
-    login,
-    proxy,
-    tasks,
-    users,
-    users_servises,
-)
+from app.api.api_v1.endpoints import api_keys, login, proxy, tasks, users, users_servises
 
 api_router = APIRouter()
 api_router.include_router(api_keys.router, prefix="/api-keys", tags=["api-keys"])

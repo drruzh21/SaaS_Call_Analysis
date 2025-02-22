@@ -1,13 +1,7 @@
 from datetime import datetime
 
 import pytz
-from neomodel import (
-    BooleanProperty,
-    DateTimeProperty,
-    StringProperty,
-    StructuredNode,
-    UniqueIdProperty,
-)
+from neomodel import BooleanProperty, DateTimeProperty, StringProperty, StructuredNode, UniqueIdProperty
 from neomodel.util import classproperty
 
 

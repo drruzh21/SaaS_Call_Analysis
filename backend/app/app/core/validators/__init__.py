@@ -1,4 +1,4 @@
-from .api_key import validate_api_key_ownership, validate_api_key_for_operation  # noqa: F401
+from .api_key import validate_api_key_for_operation, validate_api_key_ownership  # noqa: F401
 from .user import (  # noqa: F401
     validate_balance,
     validate_email,

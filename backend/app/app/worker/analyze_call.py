@@ -16,7 +16,7 @@ from app.ai.ai_agents.call_overall_analyzer import CallOverallAnalyzer
 from app.ai.ai_agents.objections_analyzer import ObjectionsAnalyzer
 from app.ai.companies_orchestrators.v1_orchestrator import V1Orchestrator
 from app.core.celery_app import celery_app
-from app.db.session import async_session
+from app.db.session_async import async_session
 from app.models.call_analysis import CallAnalysisResult, Objection
 from app.schemas.task import CallAnalysisRequest
 
@@ -87,7 +87,7 @@ def analyze_call(self, request_dict: Dict[str, Any]) -> dict:
             logger.warning("Creating initial analysis result object")
             analysis_result = CallAnalysisResult(
                 id=1,
-                company_name_id=1,
+                user_id=1,
                 lead_url="https://crm.example.com/lead/123",
                 call_text=request.text,
                 call_duration=request.call_duration,
