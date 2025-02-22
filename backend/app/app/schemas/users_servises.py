@@ -2,10 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from app.core.constants import (
-    MAX_GPT_FILTER_PROMPT_LENGTH,
-    MIN_GPT_FILTER_PROMPT_LENGTH,
-)
+from app.core.constants import MAX_GPT_FILTER_PROMPT_LENGTH, MIN_GPT_FILTER_PROMPT_LENGTH
 
 
 class UserGPTFilterPromptUpdate(BaseModel):

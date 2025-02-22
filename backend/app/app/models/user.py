@@ -18,7 +18,7 @@ from app.core.constants import (
 from app.db.base_class import Base
 
 if TYPE_CHECKING:
-    from . import APIKey, Token, CallAnalysisResult  # noqa: F401
+    from . import APIKey, CallAnalysisResult, Token  # noqa: F401
 
 
 class User(Base):

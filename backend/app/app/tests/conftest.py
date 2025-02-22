@@ -5,7 +5,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.db.session import async_session
+from app.db.session_async import async_session
 from app.main import app
 from app.tests.utils.user import authentication_token_from_email
 from app.tests.utils.utils import get_superuser_token_headers

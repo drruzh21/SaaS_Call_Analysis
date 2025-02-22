@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas
 from app.api import deps
-from app.core.validators import validate_api_key_ownership, validate_api_key_for_operation
+from app.core.validators import validate_api_key_for_operation, validate_api_key_ownership
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

@@ -10,15 +10,15 @@ logger = logging.getLogger(__name__)
 @event.listens_for(User, 'after_insert')
 def create_company_view(mapper, connection, target):
     """Create a view for the company after user creation"""
-    view_name = f"company_calls_{target.id}"
+    view_name = f"company_calls_{str(target.id).replace('-', '_')}"
     
     try:
         # SQL for creating VIEW
         view_sql = text(f"""
-        CREATE OR REPLACE VIEW company_calls_{target.id} AS
+        CREATE OR REPLACE VIEW {view_name} AS
         SELECT *
         FROM call_analysis_results
-        WHERE user_id = {target.id}
+        WHERE user_id = '{target.id}'
         """)
         
         # Execute VIEW creation
@@ -31,7 +31,7 @@ def create_company_view(mapper, connection, target):
 @event.listens_for(User, 'after_delete')
 def drop_company_view(mapper, connection, target):
     """Drop the company view after user deletion"""
-    view_name = f"company_calls_{target.id}"
+    view_name = f"company_calls_{str(target.id).replace('-', '_')}"
     
     try:
         # SQL for dropping VIEW

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import pytz
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import async_session
+from app.db.session_async import async_session
 from app.models import CallAnalysisResult, Objection
 
 # Фиксированные имена менеджеров для каждой компании
